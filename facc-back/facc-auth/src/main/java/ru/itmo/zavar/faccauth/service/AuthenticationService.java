@@ -1,9 +1,19 @@
 package ru.itmo.zavar.faccauth.service;
 
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import ru.itmo.zavar.faccauth.dto.JwtDTO;
+import ru.itmo.zavar.faccauth.dto.UserDTO;
+
 public interface AuthenticationService {
-    void addUser(String username, String password);
+    void addUser(String username, String password) throws IllegalArgumentException;
 
-    String signIn(String username, String password);
+    JwtDTO.Response.JwtDetails signIn(String username, String password) throws IllegalArgumentException;
 
-    void changeRole(String username, String role);
+    void grantAdmin(String username) throws IllegalArgumentException;
+
+    void revokeAdmin(String username) throws IllegalArgumentException;
+
+    boolean isTokenValid(String username, String token) throws UsernameNotFoundException;
+
+    UserDTO.Response.UserDetails getUserDetailsByToken(String token);
 }
