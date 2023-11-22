@@ -5,7 +5,9 @@ import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
+import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 import ru.itmo.zavar.faccauth.service.JwtService;
@@ -13,6 +15,7 @@ import ru.itmo.zavar.faccauth.service.JwtService;
 import java.security.Key;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 
@@ -37,7 +40,10 @@ public class JwtServiceImpl implements JwtService {
     @Override
     public boolean isTokenValid(String token, UserDetails userDetails) {
         final String userName = extractUserName(token);
-        return (userName.equals(userDetails.getUsername())) && !isTokenExpired(token);
+        List<?> authorities = (List<?>) extractAllClaims(token).get("authorities");
+        boolean equalCollection = CollectionUtils.isEqualCollection(authorities,
+                userDetails.getAuthorities().stream().map(GrantedAuthority::getAuthority).toList());
+        return (userName.equals(userDetails.getUsername())) && !isTokenExpired(token) && equalCollection;
     }
 
     private <T> T extractClaim(String token, Function<Claims, T> claimsResolvers) {
@@ -47,6 +53,7 @@ public class JwtServiceImpl implements JwtService {
 
     private String generateToken(Map<String, Object> extraClaims, UserDetails userDetails) {
         return Jwts.builder().setClaims(extraClaims).setSubject(userDetails.getUsername())
+                .claim("authorities", userDetails.getAuthorities().stream().map(GrantedAuthority::getAuthority).toList())
                 .setIssuedAt(new Date(System.currentTimeMillis()))
                 .setExpiration(new Date(System.currentTimeMillis() + 1000L * 60 * jwtExpiration))
                 .signWith(getSigningKey(), SignatureAlgorithm.HS256).compact();
@@ -56,7 +63,8 @@ public class JwtServiceImpl implements JwtService {
         return extractExpiration(token).before(new Date());
     }
 
-    private Date extractExpiration(String token) {
+    @Override
+    public Date extractExpiration(String token) {
         return extractClaim(token, Claims::getExpiration);
     }
 

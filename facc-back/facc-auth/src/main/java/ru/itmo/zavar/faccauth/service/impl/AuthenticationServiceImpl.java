@@ -5,9 +5,13 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import ru.itmo.zavar.faccauth.dto.JwtDTO;
+import ru.itmo.zavar.faccauth.dto.UserDTO;
 import ru.itmo.zavar.faccauth.entity.RoleEntity;
 import ru.itmo.zavar.faccauth.entity.UserEntity;
 import ru.itmo.zavar.faccauth.service.AuthenticationService;
@@ -16,8 +20,10 @@ import ru.itmo.zavar.faccauth.service.RoleService;
 import ru.itmo.zavar.faccauth.service.UserService;
 import ru.itmo.zavar.faccauth.util.RoleConstants;
 
+import java.util.Date;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -37,15 +43,15 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     @PostConstruct
     @Transactional
     public void init() {
-        if (roleService.getUserRole().isEmpty())
-            roleService.saveRole(new RoleEntity(2L, RoleConstants.USER));
-        Optional<RoleEntity> optionalRoleEntity = roleService.getAdminRole();
-        RoleEntity adminRole = optionalRoleEntity.orElseGet(() -> roleService.saveRole(new RoleEntity(0L, RoleConstants.ADMIN)));
-        if (userService.findByUsername("admin").isEmpty()) {
+        Optional<RoleEntity> optionalUserRoleEntity = roleService.getAdminRole();
+        RoleEntity userRole = optionalUserRoleEntity.orElseGet(() -> roleService.saveRole(new RoleEntity(1L, RoleConstants.USER)));
+        Optional<RoleEntity> optionalAdminRoleEntity = roleService.getAdminRole();
+        RoleEntity adminRole = optionalAdminRoleEntity.orElseGet(() -> roleService.saveRole(new RoleEntity(0L, RoleConstants.ADMIN)));
+        if (userService.findByUsername(adminUsername).isEmpty()) {
             UserEntity admin = UserEntity.builder()
                     .username(adminUsername)
                     .password(passwordEncoder.encode(adminPassword))
-                    .roles(Set.of(adminRole)).build();
+                    .roles(Set.of(userRole, adminRole)).build();
             userService.saveUser(admin);
         }
     }
@@ -68,21 +74,56 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     }
 
     @Override
-    public String signIn(String username, String password) throws IllegalArgumentException {
+    public JwtDTO.Response.JwtDetails signIn(String username, String password) throws IllegalArgumentException {
         authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(username, password));
         var user = userService.findByUsername(username)
                 .orElseThrow(() -> new IllegalArgumentException("User not found"));
-        return jwtService.generateToken(user);
+        String token = jwtService.generateToken(user);
+        Date date = jwtService.extractExpiration(token);
+        return new JwtDTO.Response.JwtDetails(user.getId(), token, date, user.getUsername(), user.getRoles().stream().map(RoleEntity::getName).collect(Collectors.toUnmodifiableSet()));
     }
 
     @Override
-    public void changeRole(String username, String role) {
+    public void grantAdmin(String username) throws IllegalArgumentException {
         Optional<UserEntity> optionalUserEntity = userService.findByUsername(username);
-        UserEntity userEntity = optionalUserEntity.orElseThrow();
-        Optional<RoleEntity> optionalRoleEntity = roleService.findByName(role);
-        RoleEntity roleEntity = optionalRoleEntity.orElseThrow();
-        userEntity.getRoles().clear();
-        userEntity.getRoles().add(roleEntity);
-        userService.saveUser(userEntity);
+        UserEntity userEntity = optionalUserEntity.orElseThrow(() -> new IllegalArgumentException("User not found"));
+        Optional<RoleEntity> optionalRoleEntity = roleService.getAdminRole();
+        RoleEntity roleEntity = optionalRoleEntity.orElseThrow(() -> new IllegalArgumentException("Role not found"));
+        if(!userEntity.getRoles().contains(roleEntity)) {
+            userEntity.getRoles().add(roleEntity);
+            userService.saveUser(userEntity);
+        } else {
+            throw new IllegalArgumentException("User already has " + RoleConstants.ADMIN + " role");
+        }
+    }
+
+    @Override
+    public void revokeAdmin(String username) throws IllegalArgumentException {
+        Optional<UserEntity> optionalUserEntity = userService.findByUsername(username);
+        UserEntity userEntity = optionalUserEntity.orElseThrow(() -> new IllegalArgumentException("User not found"));
+        Optional<RoleEntity> optionalRoleEntity = roleService.getAdminRole();
+        RoleEntity roleEntity = optionalRoleEntity.orElseThrow(() -> new IllegalArgumentException("Role not found"));
+        if(userEntity.getRoles().contains(roleEntity)) {
+            userEntity.getRoles().remove(roleEntity);
+            userService.saveUser(userEntity);
+        } else {
+            throw new IllegalArgumentException("User didn't have " + RoleConstants.ADMIN + " role");
+        }
+    }
+
+    @Override
+    public boolean isTokenValid(String username, String token) throws UsernameNotFoundException {
+        UserDetails userDetails = userService.userDetailsService()
+                .loadUserByUsername(username);
+        return jwtService.isTokenValid(token, userDetails);
+    }
+
+    @Override
+    public UserDTO.Response.UserDetails getUserDetailsByToken(String token) {
+        String username = jwtService.extractUserName(token);
+        UserEntity userDetails = (UserEntity) userService.userDetailsService()
+                .loadUserByUsername(username);
+        return new UserDTO.Response.UserDetails(userDetails.getId(), userDetails.getUsername(),
+                userDetails.getRoles().stream().map(RoleEntity::getName).collect(Collectors.toUnmodifiableSet()));
     }
 }
