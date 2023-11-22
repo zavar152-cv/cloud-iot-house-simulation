@@ -4,6 +4,11 @@ server:
     include-message: always
   servlet:
     context-path: /api/v1
+springdoc:
+  packages-to-scan: ru.itmo.zavar.faccauth.controller
+  paths-to-exclude: /profile/**, /roleEntities/**, /userEntities/**
+  api-docs:
+    path: /api-docs
 spring:
   jpa:
     database: postgresql
