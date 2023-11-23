@@ -39,5 +39,4 @@ public class FaccAuthApplication {
         slr.setDefaultLocale(Locale.ENGLISH);
         return slr;
     }
-
 }
