@@ -1,6 +1,7 @@
 package ru.itmo.zavar.faccauth.service.impl;
 
 import jakarta.annotation.PostConstruct;
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -57,10 +58,10 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     }
 
     @Override
-    public void addUser(String username, String password) throws IllegalArgumentException {
+    public void signUp(String username, String password) throws IllegalArgumentException, EntityNotFoundException {
         Optional<RoleEntity> roleUser = roleService.getUserRole();
         if (roleUser.isEmpty()) {
-            throw new IllegalArgumentException("Role not found");
+            throw new EntityNotFoundException("Role not found");
         }
         var user = UserEntity.builder()
                 .username(username)
@@ -84,11 +85,11 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     }
 
     @Override
-    public void grantAdmin(String username) throws IllegalArgumentException {
+    public void grantAdmin(String username) throws IllegalArgumentException, UsernameNotFoundException, EntityNotFoundException {
         Optional<UserEntity> optionalUserEntity = userService.findByUsername(username);
-        UserEntity userEntity = optionalUserEntity.orElseThrow(() -> new IllegalArgumentException("User not found"));
+        UserEntity userEntity = optionalUserEntity.orElseThrow(() -> new UsernameNotFoundException("User not found"));
         Optional<RoleEntity> optionalRoleEntity = roleService.getAdminRole();
-        RoleEntity roleEntity = optionalRoleEntity.orElseThrow(() -> new IllegalArgumentException("Role not found"));
+        RoleEntity roleEntity = optionalRoleEntity.orElseThrow(() -> new EntityNotFoundException("Role not found"));
         if(!userEntity.getRoles().contains(roleEntity)) {
             userEntity.getRoles().add(roleEntity);
             userService.saveUser(userEntity);
@@ -98,11 +99,11 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     }
 
     @Override
-    public void revokeAdmin(String username) throws IllegalArgumentException {
+    public void revokeAdmin(String username) throws IllegalArgumentException, UsernameNotFoundException, EntityNotFoundException {
         Optional<UserEntity> optionalUserEntity = userService.findByUsername(username);
-        UserEntity userEntity = optionalUserEntity.orElseThrow(() -> new IllegalArgumentException("User not found"));
+        UserEntity userEntity = optionalUserEntity.orElseThrow(() -> new UsernameNotFoundException("User not found"));
         Optional<RoleEntity> optionalRoleEntity = roleService.getAdminRole();
-        RoleEntity roleEntity = optionalRoleEntity.orElseThrow(() -> new IllegalArgumentException("Role not found"));
+        RoleEntity roleEntity = optionalRoleEntity.orElseThrow(() -> new EntityNotFoundException("Role not found"));
         if(userEntity.getRoles().contains(roleEntity)) {
             userEntity.getRoles().remove(roleEntity);
             userService.saveUser(userEntity);
