@@ -7,18 +7,12 @@ import org.springframework.security.access.expression.method.DefaultMethodSecuri
 import org.springframework.security.access.expression.method.MethodSecurityExpressionHandler;
 import org.springframework.security.access.hierarchicalroles.RoleHierarchy;
 import org.springframework.security.access.hierarchicalroles.RoleHierarchyImpl;
-import ru.itmo.zavar.faccauth.error.CustomErrorAttributes;
 
 @SpringBootApplication
 public class FaccAuthApplication {
 
 	public static void main(String[] args) {
 		SpringApplication.run(FaccAuthApplication.class, args);
-	}
-
-	@Bean
-	public CustomErrorAttributes customErrorAttributes() {
-		return new CustomErrorAttributes();
 	}
 
 	@Bean
