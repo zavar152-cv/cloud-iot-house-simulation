@@ -18,7 +18,7 @@ spring:
     generate-ddl: true
     properties:
       hibernate:
-        show_sql: true
+        show_sql: false
     hibernate:
       ddl-auto: update
   datasource:
@@ -26,6 +26,8 @@ spring:
     password: facc
     url: jdbc:postgresql://localhost:5432/db-facc
     driver-class-name: org.postgresql.Driver
+  mvc:
+    log-resolved-exception: true
 token:
   expire: 24
   signing:

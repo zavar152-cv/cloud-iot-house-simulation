@@ -3,6 +3,7 @@ package ru.itmo.zavar.faccauth.service.impl;
 import jakarta.annotation.PostConstruct;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -28,6 +29,7 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class AuthenticationServiceImpl implements AuthenticationService {
     private final UserService userService;
     private final RoleService roleService;
@@ -54,7 +56,9 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                     .password(passwordEncoder.encode(adminPassword))
                     .roles(Set.of(userRole, adminRole)).build();
             userService.saveUser(admin);
+            log.info("Admin created");
         }
+        log.info("DB is initialized");
     }
 
     @Override
