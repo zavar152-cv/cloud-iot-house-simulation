@@ -3,7 +3,12 @@ package ru.itmo.zavar.faccauth.error;
 import jakarta.validation.ConstraintViolationException;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.core.Ordered;
+import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.ErrorResponse;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -14,7 +19,21 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @ControllerAdvice
+@Slf4j
 public class ErrorHandlingControllerAdvice {
+
+    @Getter
+    @RequiredArgsConstructor
+    public static class ValidationErrorResponse {
+        private final List<Violation> violations;
+    }
+
+    @Getter
+    @RequiredArgsConstructor
+    public static class Violation {
+        private final String fieldName;
+        private final String message;
+    }
 
     @ResponseBody
     @ExceptionHandler(ConstraintViolationException.class)
@@ -37,18 +56,4 @@ public class ErrorHandlingControllerAdvice {
                 .collect(Collectors.toList());
         return new ValidationErrorResponse(violations);
     }
-
-    @Getter
-    @RequiredArgsConstructor
-    public static class ValidationErrorResponse {
-        private final List<Violation> violations;
-    }
-
-    @Getter
-    @RequiredArgsConstructor
-    public static class Violation {
-        private final String fieldName;
-        private final String message;
-    }
-
 }
