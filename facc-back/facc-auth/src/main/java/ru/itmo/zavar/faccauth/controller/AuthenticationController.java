@@ -26,7 +26,7 @@ import ru.itmo.zavar.faccauth.util.SpringErrorMessage;
 @RestController
 @RequestMapping("/auth")
 @RequiredArgsConstructor
-@Slf4j
+@Slf4j(topic = "AuthenticationController")
 public class AuthenticationController {
     private final AuthenticationService authenticationService;
 
@@ -40,6 +40,7 @@ public class AuthenticationController {
     public ResponseEntity<JwtDTO.Response.JwtDetails> signIn(@Valid @RequestBody UserDTO.Request.SignIn request) {
         try {
             JwtDTO.Response.JwtDetails response = authenticationService.signIn(request.getUsername(), request.getPassword());
+            log.info("User {} with id {} logged in", response.getUsername(), response.getId());
             return ResponseEntity.ok(response);
         } catch (IllegalArgumentException exception) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, exception.getMessage());
@@ -49,7 +50,7 @@ public class AuthenticationController {
     @Operation(summary = "Creates new user")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "201", description = "User created"),
-            @ApiResponse(responseCode = "400", description = "User exists",
+            @ApiResponse(responseCode = "409", description = "User exists",
                     content = {@Content(mediaType = "application/json",
                             schema = @Schema(implementation = SpringErrorMessage.class))}),
             @ApiResponse(responseCode = "404", description = "Role not found",
@@ -59,9 +60,10 @@ public class AuthenticationController {
     public ResponseEntity<?> signUp(@Valid @RequestBody UserDTO.Request.SignUp request) {
         try {
             authenticationService.signUp(request.getUsername(), request.getPassword());
+            log.info("User {} created", request.getUsername());
             return ResponseEntity.status(HttpStatus.CREATED).build();
         } catch (IllegalArgumentException exception) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, exception.getMessage());
+            throw new ResponseStatusException(HttpStatus.CONFLICT, exception.getMessage());
         } catch (EntityNotFoundException exception) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, exception.getMessage());
         }
@@ -70,7 +72,7 @@ public class AuthenticationController {
     @Operation(summary = "Grants " + RoleConstants.ADMIN + " role to user")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "User granted " + RoleConstants.ADMIN + " role"),
-            @ApiResponse(responseCode = "400", description = "User already has " + RoleConstants.ADMIN + " role",
+            @ApiResponse(responseCode = "409", description = "User already has " + RoleConstants.ADMIN + " role",
                     content = {@Content(mediaType = "application/json",
                             schema = @Schema(implementation = SpringErrorMessage.class))}),
             @ApiResponse(responseCode = "404", description = "User or role not found",
@@ -80,9 +82,10 @@ public class AuthenticationController {
     public ResponseEntity<?> grantAdmin(@Valid @RequestBody UserDTO.Request.ChangeRole request) {
         try {
             authenticationService.grantAdmin(request.getUsername());
+            log.info("Granted " + RoleConstants.ADMIN + " role to user {}", request.getUsername());
             return ResponseEntity.ok().build();
         } catch (IllegalArgumentException exception) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, exception.getMessage());
+            throw new ResponseStatusException(HttpStatus.CONFLICT, exception.getMessage());
         } catch (UsernameNotFoundException | EntityNotFoundException exception) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, exception.getMessage());
         }
@@ -91,7 +94,7 @@ public class AuthenticationController {
     @Operation(summary = "Revokes " + RoleConstants.ADMIN + " role from user")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "User lost " + RoleConstants.ADMIN + " role"),
-            @ApiResponse(responseCode = "400", description = "User didn't have " + RoleConstants.ADMIN + " role",
+            @ApiResponse(responseCode = "409", description = "User didn't have " + RoleConstants.ADMIN + " role",
                     content = {@Content(mediaType = "application/json",
                             schema = @Schema(implementation = SpringErrorMessage.class))}),
             @ApiResponse(responseCode = "404", description = "User or role not found",
@@ -101,9 +104,10 @@ public class AuthenticationController {
     public ResponseEntity<?> revokeAdmin(@Valid @RequestBody UserDTO.Request.ChangeRole request) {
         try {
             authenticationService.revokeAdmin(request.getUsername());
+            log.info("Revoked " + RoleConstants.ADMIN + " role from user {}", request.getUsername());
             return ResponseEntity.ok().build();
         } catch (IllegalArgumentException exception) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, exception.getMessage());
+            throw new ResponseStatusException(HttpStatus.CONFLICT, exception.getMessage());
         } catch (UsernameNotFoundException | EntityNotFoundException exception) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, exception.getMessage());
         }
@@ -126,7 +130,9 @@ public class AuthenticationController {
             boolean tokenValid = authenticationService.isTokenValid(request.getUsername(), request.getJwtToken());
             if (!tokenValid)
                 throw new JwtException("JWT token is not valid");
-            return ResponseEntity.ok(authenticationService.getUserDetailsByToken(request.getJwtToken()));
+            UserDTO.Response.UserDetails userDetailsByToken = authenticationService.getUserDetailsByToken(request.getJwtToken());
+            log.info("User {} has valid token {} and got details", request.getUsername(), request.getJwtToken());
+            return ResponseEntity.ok(userDetailsByToken);
         } catch (UsernameNotFoundException exception) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, exception.getMessage());
         } catch (JwtException exception) {
