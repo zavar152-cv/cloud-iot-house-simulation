@@ -1,20 +1,20 @@
-package ru.itmo.zavar.job;
+package ru.itmo.zavar.job.speakers;
 
-import java.util.stream.IntStream;
-
+import lombok.extern.slf4j.Slf4j;
 import org.quartz.DisallowConcurrentExecution;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
+import org.springframework.lang.NonNull;
 import org.springframework.scheduling.quartz.QuartzJobBean;
 
-import lombok.extern.slf4j.Slf4j;
+import java.util.stream.IntStream;
 
 @Slf4j
 @DisallowConcurrentExecution
-public class SampleCronJob extends QuartzJobBean {
+public class SpeakersJob extends QuartzJobBean {
     @Override
-    protected void executeInternal(JobExecutionContext context) throws JobExecutionException {
-        log.info("SampleCronJob Start................");
+    protected void executeInternal(@NonNull JobExecutionContext context) throws JobExecutionException {
+        log.info("{} Start................", getClass().getName());
         IntStream.range(0, 10).forEach(i -> {
             log.info("Counting - {}", i);
             try {
@@ -23,6 +23,6 @@ public class SampleCronJob extends QuartzJobBean {
                 log.error(e.getMessage(), e);
             }
         });
-        log.info("SampleCronJob End................");
+        log.info("{} End................", getClass().getName());
     }
 }

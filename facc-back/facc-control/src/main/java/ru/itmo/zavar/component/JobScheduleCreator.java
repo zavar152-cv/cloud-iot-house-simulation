@@ -21,7 +21,7 @@ import lombok.extern.slf4j.Slf4j;
 public class JobScheduleCreator {
 
     public JobDetail createJob(Class<? extends QuartzJobBean> jobClass, boolean isDurable,
-                               ApplicationContext context, String jobName, String jobGroup) {
+                               ApplicationContext context, String jobName, String jobGroup, Long id) {
         JobDetailFactoryBean factoryBean = new JobDetailFactoryBean();
         factoryBean.setJobClass(jobClass);
         factoryBean.setDurability(isDurable);
@@ -32,6 +32,10 @@ public class JobScheduleCreator {
         // set job data map
         JobDataMap jobDataMap = new JobDataMap();
         jobDataMap.put(jobName + jobGroup, jobClass.getName());
+        jobDataMap.put("group", jobGroup);
+        jobDataMap.put("name", jobName);
+        jobDataMap.put("class", jobClass.getName());
+        jobDataMap.put("id", id);
         factoryBean.setJobDataMap(jobDataMap);
         factoryBean.afterPropertiesSet();
         return factoryBean.getObject();
