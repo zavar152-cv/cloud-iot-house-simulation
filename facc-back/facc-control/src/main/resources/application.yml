@@ -15,7 +15,7 @@ spring:
       hibernate:
         show_sql: false
     hibernate:
-      ddl-auto: create-drop
+      ddl-auto: update
   datasource:
     username: user_db
     password: facc
