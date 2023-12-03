@@ -1,6 +1,5 @@
 package ru.itmo.zavar.job.light;
 
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.quartz.DisallowConcurrentExecution;
 import org.quartz.JobExecutionContext;
@@ -13,6 +12,7 @@ import ru.itmo.zavar.entity.TimetableEntryEntity;
 import ru.itmo.zavar.repository.TimetableEntryRepository;
 import ru.itmo.zavar.util.JobStatus;
 
+import java.util.Optional;
 import java.util.stream.IntStream;
 
 @Slf4j
@@ -27,6 +27,7 @@ public class LightJob extends QuartzJobBean {
         Long id = (Long) context.getMergedJobDataMap().get("id");
         TimetableEntryEntity timetableEntryEntity = timetableEntryRepository.findById(id).orElseThrow();
         timetableEntryEntity.setJobStatus(JobStatus.EXECUTING);
+        log.info("Set {} status to job with id {}", JobStatus.EXECUTING, id);
         timetableEntryRepository.save(timetableEntryEntity);
         log.info("{} Start................", getClass().getName());
         IntStream.range(0, 10).forEach(i -> {
@@ -36,10 +37,21 @@ public class LightJob extends QuartzJobBean {
             } catch (InterruptedException e) {
                 log.error(e.getMessage(), e);
             }
+
         });
         log.info("{} End................", getClass().getName());
-        timetableEntryEntity = timetableEntryRepository.findById(id).orElseThrow();
-        timetableEntryEntity.setJobStatus(JobStatus.SCHEDULED);
-        timetableEntryRepository.save(timetableEntryEntity);
+        Optional<TimetableEntryEntity> optionalTimetableEntry = timetableEntryRepository.findById(id);
+        if(optionalTimetableEntry.isPresent()) {
+            timetableEntryEntity = optionalTimetableEntry.get();
+            if(timetableEntryEntity.getJobStatus().equals(JobStatus.PAUSED)) {
+                log.warn("Job with id {} was paused while executing", id);
+            } else {
+                timetableEntryEntity.setJobStatus(JobStatus.SCHEDULED);
+                timetableEntryRepository.save(timetableEntryEntity);
+                log.info("Set {} status to job with id {}", JobStatus.SCHEDULED, id);
+            }
+        } else {
+            log.warn("Job with id {} was deleted before ending", id);
+        }
     }
 }

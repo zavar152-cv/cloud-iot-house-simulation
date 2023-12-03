@@ -1,8 +1,6 @@
 package ru.itmo.zavar.component;
 
-import java.text.ParseException;
-import java.util.Date;
-
+import lombok.extern.slf4j.Slf4j;
 import org.quartz.CronTrigger;
 import org.quartz.JobDataMap;
 import org.quartz.JobDetail;
@@ -14,7 +12,8 @@ import org.springframework.scheduling.quartz.QuartzJobBean;
 import org.springframework.scheduling.quartz.SimpleTriggerFactoryBean;
 import org.springframework.stereotype.Component;
 
-import lombok.extern.slf4j.Slf4j;
+import java.text.ParseException;
+import java.util.Date;
 
 @Slf4j
 @Component

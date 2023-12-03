@@ -1,11 +1,8 @@
 package ru.itmo.zavar.repository;
 
 import org.springframework.data.repository.CrudRepository;
-import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Repository;
 import ru.itmo.zavar.entity.TimetableEntryEntity;
-
-import java.util.Optional;
 
 @Repository
 public interface TimetableEntryRepository extends CrudRepository<TimetableEntryEntity, Long> {

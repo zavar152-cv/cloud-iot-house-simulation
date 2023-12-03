@@ -60,7 +60,14 @@ public enum TimetableEntryDTO {
 
     public enum Response {
         ;
-
+        @Value
+        public static class TimetableEntry implements Id, Group, Name, CronExpression, Description {
+            Long id;
+            String name;
+            JobGroup group;
+            String cronExpression;
+            String description;
+        }
     }
 
 }
