@@ -16,11 +16,9 @@ import ru.itmo.zavar.faccauth.dto.JwtDTO;
 import ru.itmo.zavar.faccauth.dto.UserDTO;
 import ru.itmo.zavar.faccauth.entity.RoleEntity;
 import ru.itmo.zavar.faccauth.entity.UserEntity;
-import ru.itmo.zavar.faccauth.service.AuthenticationService;
-import ru.itmo.zavar.faccauth.service.JwtService;
-import ru.itmo.zavar.faccauth.service.RoleService;
-import ru.itmo.zavar.faccauth.service.UserService;
+import ru.itmo.zavar.faccauth.service.*;
 import ru.itmo.zavar.faccauth.util.RoleConstants;
+import yandex.cloud.api.logging.v1.LogEntryOuterClass;
 
 import java.util.Date;
 import java.util.Optional;
@@ -36,6 +34,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
     private final AuthenticationManager authenticationManager;
+    private final CloudLoggingService cloudLoggingService;
 
     @Value("${admin.username}")
     private String adminUsername;
@@ -57,8 +56,10 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                     .roles(Set.of(userRole, adminRole)).build();
             userService.saveUser(admin);
             log.info("Admin created");
+            cloudLoggingService.log(LogEntryOuterClass.LogLevel.Level.INFO, "AuthenticationService", "Admin created");
         }
         log.info("DB is initialized");
+        cloudLoggingService.log(LogEntryOuterClass.LogLevel.Level.INFO, "AuthenticationService", "DB is initialized");
     }
 
     @Override

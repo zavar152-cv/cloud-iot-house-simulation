@@ -19,8 +19,10 @@ import org.springframework.web.server.ResponseStatusException;
 import ru.itmo.zavar.faccauth.dto.JwtDTO;
 import ru.itmo.zavar.faccauth.dto.UserDTO;
 import ru.itmo.zavar.faccauth.service.AuthenticationService;
+import ru.itmo.zavar.faccauth.service.CloudLoggingService;
 import ru.itmo.zavar.faccauth.util.RoleConstants;
 import ru.itmo.zavar.faccauth.util.SpringErrorMessage;
+import yandex.cloud.api.logging.v1.LogEntryOuterClass;
 
 @Tag(name = "AuthenticationController", description = "Provides methods for authentication, role changing and token validation")
 @RestController
@@ -29,6 +31,7 @@ import ru.itmo.zavar.faccauth.util.SpringErrorMessage;
 @Slf4j(topic = "AuthenticationController")
 public class AuthenticationController {
     private final AuthenticationService authenticationService;
+    private final CloudLoggingService cloudLoggingService;
 
     @Operation(summary = "Generates new JWT token for provided credentials and returns user info")
     @ApiResponses(value = {
@@ -41,6 +44,8 @@ public class AuthenticationController {
         try {
             JwtDTO.Response.JwtDetails response = authenticationService.signIn(request.getUsername(), request.getPassword());
             log.info("User {} with id {} logged in", response.getUsername(), response.getId());
+            cloudLoggingService.log(LogEntryOuterClass.LogLevel.Level.INFO, "AuthenticationService",
+                    "User {} with id {} logged in", response.getUsername(), response.getId());
             return ResponseEntity.ok(response);
         } catch (IllegalArgumentException exception) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, exception.getMessage());
@@ -61,6 +66,8 @@ public class AuthenticationController {
         try {
             authenticationService.signUp(request.getUsername(), request.getPassword());
             log.info("User {} created", request.getUsername());
+            cloudLoggingService.log(LogEntryOuterClass.LogLevel.Level.INFO, "AuthenticationService",
+                    "User {} created", request.getUsername());
             return ResponseEntity.status(HttpStatus.CREATED).build();
         } catch (IllegalArgumentException exception) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, exception.getMessage());
@@ -82,7 +89,9 @@ public class AuthenticationController {
     public ResponseEntity<?> grantAdmin(@Valid @RequestBody UserDTO.Request.ChangeRole request) {
         try {
             authenticationService.grantAdmin(request.getUsername());
-            log.info("Granted " + RoleConstants.ADMIN + " role to user {}", request.getUsername());
+            log.info("Granted {} role to user {}", RoleConstants.ADMIN, request.getUsername());
+            cloudLoggingService.log(LogEntryOuterClass.LogLevel.Level.INFO, "AuthenticationService",
+                    "Granted {} role to user {}", RoleConstants.ADMIN, request.getUsername());
             return ResponseEntity.ok().build();
         } catch (IllegalArgumentException exception) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, exception.getMessage());
@@ -104,7 +113,9 @@ public class AuthenticationController {
     public ResponseEntity<?> revokeAdmin(@Valid @RequestBody UserDTO.Request.ChangeRole request) {
         try {
             authenticationService.revokeAdmin(request.getUsername());
-            log.info("Revoked " + RoleConstants.ADMIN + " role from user {}", request.getUsername());
+            log.info("Revoked {} role from user {}", RoleConstants.ADMIN, request.getUsername());
+            cloudLoggingService.log(LogEntryOuterClass.LogLevel.Level.INFO, "AuthenticationService",
+                    "Revoked {} role from user {}", RoleConstants.ADMIN, request.getUsername());
             return ResponseEntity.ok().build();
         } catch (IllegalArgumentException exception) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, exception.getMessage());
@@ -132,6 +143,8 @@ public class AuthenticationController {
                 throw new JwtException("JWT token is not valid");
             UserDTO.Response.UserDetails userDetailsByToken = authenticationService.getUserDetailsByToken(request.getJwtToken());
             log.info("User {} has valid token {} and got details", request.getUsername(), request.getJwtToken());
+            cloudLoggingService.log(LogEntryOuterClass.LogLevel.Level.INFO, "AuthenticationService",
+                    "User {} has valid token {} and got details", request.getUsername(), request.getJwtToken());
             return ResponseEntity.ok(userDetailsByToken);
         } catch (UsernameNotFoundException exception) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, exception.getMessage());

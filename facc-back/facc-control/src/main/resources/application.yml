@@ -25,4 +25,7 @@ spring:
     log-resolved-exception: true
 logging:
   level:
-    sql: debug
+    sql: debug\
+yandex:
+  auth-key-file: /authorized_key.json
+  log-group-id: e232s1431gbklopopjth
