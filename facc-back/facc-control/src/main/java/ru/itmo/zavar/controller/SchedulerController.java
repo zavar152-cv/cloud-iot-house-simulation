@@ -1,0 +1,103 @@
+package ru.itmo.zavar.controller;
+
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.quartz.SchedulerException;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
+import ru.itmo.zavar.dto.TimetableEntryDTO;
+import ru.itmo.zavar.service.SchedulerService;
+
+import java.util.List;
+import java.util.Map;
+import java.util.NoSuchElementException;
+
+@RestController
+@RequestMapping("/scheduler")
+@RequiredArgsConstructor
+@Slf4j(topic = "SchedulerController")
+public class SchedulerController {
+    private final SchedulerService schedulerService;
+
+    @GetMapping("/timetable-entries")
+    public ResponseEntity<List<TimetableEntryDTO.Response.TimetableEntry>> getAllTimetableEntries() {
+        var all = schedulerService.getAllEntries();
+        return ResponseEntity.ok(all);
+    }
+
+    @GetMapping("/timetable-entries/{id}")
+    public ResponseEntity<TimetableEntryDTO.Response.TimetableEntry> getTimetableEntry(@PathVariable @Positive @NotNull Long id) {
+        try {
+            TimetableEntryDTO.Response.TimetableEntry entry = schedulerService.getEntryById(id);
+            return ResponseEntity.ok(entry);
+        } catch (NoSuchElementException e) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
+        }
+    }
+
+    @PostMapping("/timetable-entries")
+    public ResponseEntity<?> createTimetableEntry(@Valid @RequestBody TimetableEntryDTO.Request.CreateNewEntry entry,
+                                                  @RequestParam Map<String, String> additionalParams) {
+        try {
+            schedulerService.createTimetableEntry(entry.getName(), entry.getGroup(), entry.getCronExpression(), entry.getDescription());
+        } catch (SchedulerException e) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
+        } catch (IllegalArgumentException e) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, e.getMessage());
+        }
+        return ResponseEntity.status(HttpStatus.CREATED).build();
+    }
+
+    @PutMapping("/timetable-entries/{id}")
+    public ResponseEntity<?> updateTimetableEntry(@Valid @RequestBody TimetableEntryDTO.Request.UpdateEntry entry,
+                                                  @PathVariable @Positive @NotNull Long id) {
+        try {
+            schedulerService.updateTimetableEntry(id, entry.getName(), entry.getCronExpression(), entry.getDescription());
+        } catch (SchedulerException e) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
+        } catch (NoSuchElementException e) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
+        }
+        return ResponseEntity.ok().build();
+    }
+
+    @DeleteMapping("/timetable-entries/{id}")
+    public ResponseEntity<?> deleteTimetableEntry(@PathVariable @Positive @NotNull Long id) {
+        try {
+            boolean deleted = schedulerService.deleteTimetableEntry(id);
+            if(deleted)
+                return ResponseEntity.ok().build();
+            else
+                throw new ResponseStatusException(HttpStatus.CONFLICT);
+        } catch (SchedulerException e) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
+        } catch (NoSuchElementException e) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
+        }
+    }
+
+    @PutMapping("/timetable-entries/{id}/action")
+    public ResponseEntity<?> makeActionWithTimetableEntry(@PathVariable @Positive @NotNull Long id,
+                                                          @RequestParam("command") String command) {
+        try {
+            switch (command) {
+                case "start" -> schedulerService.startJob(id);
+                case "pause" -> schedulerService.pauseJob(id);
+                case "resume" -> schedulerService.resumeJob(id);
+                default -> throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
+            }
+        } catch (SchedulerException e) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
+        } catch (NoSuchElementException e) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
+        } catch (IllegalStateException e) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, e.getMessage());
+        }
+        return ResponseEntity.ok().build();
+    }
+}

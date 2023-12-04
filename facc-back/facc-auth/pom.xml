@@ -11,7 +11,7 @@
 	<groupId>ru.itmo.zavar</groupId>
 	<artifactId>facc-auth</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<name>facc-auth</name>
+    <name>facc-auth</name>
 	<description>facc-auth</description>
 	<properties>
 		<java.version>17</java.version>
