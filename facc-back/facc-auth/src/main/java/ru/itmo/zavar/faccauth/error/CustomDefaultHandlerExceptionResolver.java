@@ -3,6 +3,7 @@ package ru.itmo.zavar.faccauth.error;
 import jakarta.servlet.ServletRequest;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.lang.NonNull;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -10,20 +11,34 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.mvc.support.DefaultHandlerExceptionResolver;
 import org.springframework.web.util.ContentCachingRequestWrapper;
+import ru.itmo.zavar.faccauth.service.CloudLoggingService;
+import yandex.cloud.api.logging.v1.LogEntryOuterClass;
 
 @Component
+@RequiredArgsConstructor
 @Slf4j(topic = "Server errors")
 public class CustomDefaultHandlerExceptionResolver extends DefaultHandlerExceptionResolver {
+
+    private final CloudLoggingService cloudLoggingService;
+
     @Override
     protected ModelAndView doResolveException(@NonNull HttpServletRequest request, @NonNull HttpServletResponse response, Object handler, @NonNull Exception exception) {
         ContentCachingRequestWrapper requestWrapper = requestWrapper(request);
 
-        log.error("Received request: {} {} from {} with body\n{}", requestWrapper.getMethod(), requestWrapper.getRequestURI(), requestWrapper.getRemoteAddr(),
-                new String(requestWrapper.getContentAsByteArray()).replace("\n", "").replace(" ", ""));
-        if(exception instanceof BadCredentialsException) {
+        String content = new String(requestWrapper.getContentAsByteArray()).replace("\n", "");
+        log.error("Received request: {} {} from {} with body\n{}", requestWrapper.getMethod(), requestWrapper.getRequestURI(),
+                requestWrapper.getRemoteAddr(), content);
+        cloudLoggingService.log(LogEntryOuterClass.LogLevel.Level.ERROR, "Server errors",
+                "Received request: {} {} from {} with body\n{}", requestWrapper.getMethod(), requestWrapper.getRequestURI(),
+                requestWrapper.getRemoteAddr(), content);
+        if (exception instanceof BadCredentialsException) {
             log.error("Got server error: " + exception.getMessage());
+            cloudLoggingService.log(LogEntryOuterClass.LogLevel.Level.ERROR, "Server errors",
+                    "Got server error: " + exception.getMessage());
         } else {
             log.error("Got server error:", exception);
+            cloudLoggingService.log(LogEntryOuterClass.LogLevel.Level.ERROR, "Server errors",
+                    "Got server error: ", exception);
         }
 
         return super.doResolveException(request, response, handler, exception);

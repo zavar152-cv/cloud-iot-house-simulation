@@ -6,20 +6,25 @@ import jakarta.servlet.ServletRequest;
 import jakarta.servlet.ServletResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.GenericFilterBean;
 import org.springframework.web.util.ContentCachingRequestWrapper;
 import org.springframework.web.util.ContentCachingResponseWrapper;
+import ru.itmo.zavar.faccauth.service.CloudLoggingService;
+import yandex.cloud.api.logging.v1.LogEntryOuterClass;
 
 import java.io.IOException;
 import java.util.Collection;
 import java.util.function.Function;
 
 @Component
+@RequiredArgsConstructor
 @Slf4j(topic = "Request/Response logs")
 public class LoggingFilterBean extends GenericFilterBean {
+
+    private final CloudLoggingService cloudLoggingService;
 
     @Override
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
@@ -33,16 +38,25 @@ public class LoggingFilterBean extends GenericFilterBean {
     }
 
     private void logRequest(ContentCachingRequestWrapper request) {
-        log.info("Received request: {} {} from {} with body\n{}", request.getMethod(), request.getRequestURI(), request.getRemoteAddr(),
-                new String(request.getContentAsByteArray()).replace("\n",""));
+        String content = new String(request.getContentAsByteArray()).replace("\n", "");
+        log.info("Received request: {} {} from {} with body\n{}", request.getMethod(), request.getRequestURI(),
+                request.getRemoteAddr(), content);
+
+        cloudLoggingService.log(LogEntryOuterClass.LogLevel.Level.INFO, "Request/Response logs",
+                "Received request: {} {} from {} with body\n{}", request.getMethod(),
+                request.getRequestURI(), request.getRemoteAddr(), content);
     }
 
     private void logResponse(ContentCachingResponseWrapper response) throws IOException {
         String s = new String(response.getContentAsByteArray());
-        if(s.isEmpty()) {
+        if (s.isEmpty()) {
             log.info("Sent response: with status {}", response.getStatus());
+            cloudLoggingService.log(LogEntryOuterClass.LogLevel.Level.INFO, "Request/Response logs",
+                    "Sent response: with status {}", response.getStatus());
         } else {
-            log.info("Sent response: with status {} and body\n{}", response.getStatus(), new String(response.getContentAsByteArray()));
+            log.info("Sent response: with status {} and body\n{}", response.getStatus(), s);
+            cloudLoggingService.log(LogEntryOuterClass.LogLevel.Level.INFO, "Request/Response logs",
+                    "Sent response: with status {} and body\n{}", response.getStatus(), s);
         }
         response.copyBodyToResponse();
     }
