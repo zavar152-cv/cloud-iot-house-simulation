@@ -9,9 +9,9 @@
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>ru.itmo.zavar</groupId>
-	<artifactId>facc-auth</artifactId>
+	<artifactId>facc-control</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<name>facc-auth</name>
+	<name>facc-control</name>
 	<properties>
 		<java.version>17</java.version>
 	</properties>

@@ -34,7 +34,7 @@ public class LoggingFilterBean extends GenericFilterBean {
 
     private void logRequest(ContentCachingRequestWrapper request) {
         log.info("Received request: {} {} from {} with body\n{}", request.getMethod(), request.getRequestURI(), request.getRemoteAddr(),
-                new String(request.getContentAsByteArray()).replace("\n","").replace(" ", ""));
+                new String(request.getContentAsByteArray()).replace("\n",""));
     }
 
     private void logResponse(ContentCachingResponseWrapper response) throws IOException {
