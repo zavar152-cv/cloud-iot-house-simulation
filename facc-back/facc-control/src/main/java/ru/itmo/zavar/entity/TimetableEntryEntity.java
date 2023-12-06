@@ -7,8 +7,11 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import ru.itmo.zavar.util.JobGroup;
-import ru.itmo.zavar.util.JobStatus;
+import ru.itmo.zavar.converter.StringListConverter;
+import ru.itmo.zavar.model.JobGroup;
+import ru.itmo.zavar.model.JobStatus;
+
+import java.util.List;
 
 @Data
 @Builder
@@ -20,6 +23,12 @@ public class TimetableEntryEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @NotNull
+    private DeviceEntity device;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @NotNull
+    private ActionEntity action;
     @NotBlank
     private String name;
     @Enumerated(EnumType.STRING)
@@ -34,4 +43,7 @@ public class TimetableEntryEntity {
     private String cronExpression;
     @NotBlank
     private String description;
+    @Convert(converter = StringListConverter.class)
+    @Column(name = "arguments", nullable = false)
+    private List<String> arguments;
 }
