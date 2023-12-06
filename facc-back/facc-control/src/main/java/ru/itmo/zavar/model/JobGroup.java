@@ -1,4 +1,4 @@
-package ru.itmo.zavar.util;
+package ru.itmo.zavar.model;
 
 public enum JobGroup {
     LIGHT_GROUP,

@@ -10,7 +10,7 @@ import org.springframework.scheduling.quartz.QuartzJobBean;
 import org.springframework.stereotype.Component;
 import ru.itmo.zavar.entity.TimetableEntryEntity;
 import ru.itmo.zavar.repository.TimetableEntryRepository;
-import ru.itmo.zavar.util.JobStatus;
+import ru.itmo.zavar.model.JobStatus;
 
 import java.util.Optional;
 import java.util.stream.IntStream;

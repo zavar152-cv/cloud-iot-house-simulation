@@ -1,6 +1,7 @@
 package ru.itmo.zavar.service.impl;
 
 import jakarta.annotation.PostConstruct;
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.quartz.*;
@@ -11,15 +12,19 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.itmo.zavar.component.JobScheduleCreator;
 import ru.itmo.zavar.dto.TimetableEntryDTO;
+import ru.itmo.zavar.entity.ActionEntity;
+import ru.itmo.zavar.entity.DeviceEntity;
 import ru.itmo.zavar.entity.TimetableEntryEntity;
 import ru.itmo.zavar.job.curtains.CurtainsJob;
 import ru.itmo.zavar.job.light.LightJob;
 import ru.itmo.zavar.job.music.MusicJob;
 import ru.itmo.zavar.job.speakers.SpeakersJob;
+import ru.itmo.zavar.repository.ActionRepository;
+import ru.itmo.zavar.repository.DeviceRepository;
 import ru.itmo.zavar.repository.TimetableEntryRepository;
 import ru.itmo.zavar.service.SchedulerService;
-import ru.itmo.zavar.util.JobGroup;
-import ru.itmo.zavar.util.JobStatus;
+import ru.itmo.zavar.model.JobGroup;
+import ru.itmo.zavar.model.JobStatus;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -34,6 +39,8 @@ public class SchedulerServiceImpl implements SchedulerService {
 
     private final SchedulerFactoryBean schedulerFactoryBean;
     private final TimetableEntryRepository timetableEntryRepository;
+    private final DeviceRepository deviceRepository;
+    private final ActionRepository actionRepository;
     private final ApplicationContext context;
     private final JobScheduleCreator scheduleCreator;
 
@@ -58,7 +65,9 @@ public class SchedulerServiceImpl implements SchedulerService {
     }
 
     @Override
-    public void createTimetableEntry(String name, JobGroup group, String cronExpression, String description) throws SchedulerException, IllegalArgumentException {
+    public void createTimetableEntry(String name, JobGroup group, String cronExpression, String description, String deviceId, Long actionId, List<String> arguments) throws SchedulerException, IllegalArgumentException, EntityNotFoundException {
+        DeviceEntity deviceEntity = deviceRepository.findById(deviceId).orElseThrow(() -> new EntityNotFoundException("Device not found"));
+        ActionEntity actionEntity = actionRepository.findById(actionId).orElseThrow(() -> new EntityNotFoundException("Action not found"));
         Class<? extends QuartzJobBean> jobClass = getClassByGroup(group);
         try {
             Scheduler scheduler = schedulerFactoryBean.getScheduler();
@@ -73,6 +82,9 @@ public class SchedulerServiceImpl implements SchedulerService {
                         .cronExpression(cronExpression)
                         .description(description)
                         .name(name)
+                        .device(deviceEntity)
+                        .action(actionEntity)
+                        .arguments(arguments)
                         .jobGroup(group).build();
                 TimetableEntryEntity savedEntry = timetableEntryRepository.save(entryEntity);
                 jobDetail = scheduleCreator.createJob(jobClass, false, context, name, group.name(), savedEntry.getId());
@@ -197,7 +209,10 @@ public class SchedulerServiceImpl implements SchedulerService {
         List<TimetableEntryDTO.Response.TimetableEntry> all = new ArrayList<>();
         iterable.forEach(entry -> all.add(new TimetableEntryDTO.Response.TimetableEntry(entry.getId(),
                 entry.getName(), entry.getJobGroup(),
-                entry.getCronExpression(), entry.getDescription())));
+                entry.getCronExpression(), entry.getDescription(),
+                entry.getDevice().getId(), entry.getAction().getId(),
+                entry.getDevice().getName(), entry.getAction().getAction(),
+                entry.getArguments())));
         return all;
     }
 
@@ -206,6 +221,9 @@ public class SchedulerServiceImpl implements SchedulerService {
         TimetableEntryEntity entry = timetableEntryRepository.findById(id).orElseThrow();
         return new TimetableEntryDTO.Response.TimetableEntry(entry.getId(),
                 entry.getName(), entry.getJobGroup(),
-                entry.getCronExpression(), entry.getDescription());
+                entry.getCronExpression(), entry.getDescription(),
+                entry.getDevice().getId(), entry.getAction().getId(),
+                entry.getDevice().getName(), entry.getAction().getAction(),
+                entry.getArguments());
     }
 }

@@ -1,5 +1,6 @@
 package ru.itmo.zavar.controller;
 
+import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
@@ -41,14 +42,16 @@ public class SchedulerController {
     }
 
     @PostMapping("/timetable-entries")
-    public ResponseEntity<?> createTimetableEntry(@Valid @RequestBody TimetableEntryDTO.Request.CreateNewEntry entry,
-                                                  @RequestParam Map<String, String> additionalParams) {
+    public ResponseEntity<?> createTimetableEntry(@Valid @RequestBody TimetableEntryDTO.Request.CreateNewEntry entry) {
         try {
-            schedulerService.createTimetableEntry(entry.getName(), entry.getGroup(), entry.getCronExpression(), entry.getDescription());
+            schedulerService.createTimetableEntry(entry.getName(), entry.getGroup(), entry.getCronExpression(),
+                    entry.getDescription(), entry.getDeviceId(), entry.getActionId(), entry.getArguments());
         } catch (SchedulerException e) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
         } catch (IllegalArgumentException e) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, e.getMessage());
+        } catch (EntityNotFoundException e) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
         }
         return ResponseEntity.status(HttpStatus.CREATED).build();
     }
