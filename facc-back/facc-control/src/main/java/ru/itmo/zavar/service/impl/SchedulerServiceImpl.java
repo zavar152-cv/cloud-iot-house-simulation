@@ -53,6 +53,9 @@ public class SchedulerServiceImpl implements SchedulerService {
             Class<? extends QuartzJobBean> jobClass = getClassByGroup(timetableEntry.getGroup());
             JobDetail jobDetail = scheduleCreator.createJob(jobClass, false, context, timetableEntry.getName(), timetableEntry.getGroup().name(), timetableEntry.getId());
 
+            jobDetail.getJobDataMap().put("arguments", timetableEntry.getArguments());
+            jobDetail.getJobDataMap().put("action", timetableEntry.getActionName());
+
             Trigger trigger = scheduleCreator.createCronTrigger(timetableEntry.getName(), new Date(),
                     timetableEntry.getCronExpression(), SimpleTrigger.MISFIRE_INSTRUCTION_FIRE_NOW);
             try {
@@ -69,6 +72,10 @@ public class SchedulerServiceImpl implements SchedulerService {
         DeviceEntity deviceEntity = deviceRepository.findById(deviceId).orElseThrow(() -> new EntityNotFoundException("Device not found"));
         ActionEntity actionEntity = actionRepository.findById(actionId).orElseThrow(() -> new EntityNotFoundException("Action not found"));
         Class<? extends QuartzJobBean> jobClass = getClassByGroup(group);
+
+        if(actionEntity.getArgumentsCount() != arguments.size())
+            throw new IllegalArgumentException("Check arguments count");
+
         try {
             Scheduler scheduler = schedulerFactoryBean.getScheduler();
 
@@ -88,6 +95,9 @@ public class SchedulerServiceImpl implements SchedulerService {
                         .jobGroup(group).build();
                 TimetableEntryEntity savedEntry = timetableEntryRepository.save(entryEntity);
                 jobDetail = scheduleCreator.createJob(jobClass, false, context, name, group.name(), savedEntry.getId());
+
+                jobDetail.getJobDataMap().put("arguments", arguments);
+                jobDetail.getJobDataMap().put("action", actionEntity.getAction());
 
                 Trigger trigger = scheduleCreator.createCronTrigger(name, new Date(),
                         cronExpression, SimpleTrigger.MISFIRE_INSTRUCTION_FIRE_NOW);

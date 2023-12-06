@@ -22,7 +22,7 @@ public class DeviceEntity {
     @Column(unique = true)
     private String name;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @NotNull
     private TypeEntity type;
 

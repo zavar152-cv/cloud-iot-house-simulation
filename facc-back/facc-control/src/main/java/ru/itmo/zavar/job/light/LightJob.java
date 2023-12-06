@@ -12,6 +12,7 @@ import ru.itmo.zavar.entity.TimetableEntryEntity;
 import ru.itmo.zavar.repository.TimetableEntryRepository;
 import ru.itmo.zavar.model.JobStatus;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.stream.IntStream;
 
@@ -29,17 +30,14 @@ public class LightJob extends QuartzJobBean {
         timetableEntryEntity.setJobStatus(JobStatus.EXECUTING);
         log.info("Set {} status to job with id {}", JobStatus.EXECUTING, id);
         timetableEntryRepository.save(timetableEntryEntity);
-        log.info("{} Start................", getClass().getName());
-        IntStream.range(0, 10).forEach(i -> {
-            log.info("Counting - {}", i);
-            try {
-                Thread.sleep(1000);
-            } catch (InterruptedException e) {
-                log.error(e.getMessage(), e);
-            }
 
-        });
-        log.info("{} End................", getClass().getName());
+        List<String> arguments = (List<String>) context.getMergedJobDataMap().get("arguments");
+        String action = (String) context.getMergedJobDataMap().get("action");
+        if(arguments.isEmpty())
+            log.info("Executing job with action {}", action);
+        else
+            log.info("Executing job with arguments {} and action {}", String.join(", ", arguments), action);
+
         Optional<TimetableEntryEntity> optionalTimetableEntry = timetableEntryRepository.findById(id);
         if(optionalTimetableEntry.isPresent()) {
             timetableEntryEntity = optionalTimetableEntry.get();
