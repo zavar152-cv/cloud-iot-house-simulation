@@ -14,6 +14,6 @@ import lombok.NoArgsConstructor;
 @Table(name = "state")
 public class StateEntity {
     @Id
-    @OneToOne(fetch = FetchType.LAZY)
+    @OneToOne(fetch = FetchType.EAGER)
     private StatusEntity simulationStatus;
 }

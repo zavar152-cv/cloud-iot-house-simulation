@@ -17,7 +17,7 @@ public class CommandForActionEntity {
     @Id
     private String command;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @NotNull
     private ActionEntity action;
 }
