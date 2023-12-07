@@ -29,3 +29,11 @@ logging:
 yandex:
   auth-key-file: /authorized_key.json
   log-group-id: e232s1431gbklopopjth
+  speech-kit:
+    api-key: AQVN0d46lvCEhtvxu40fPEQmEO6kfJ2MSWYaaC0b
+    tts:
+      host: tts.api.cloud.yandex.net
+      port: 443
+    stt:
+      host: stt.api.cloud.yandex.net
+      port: 443

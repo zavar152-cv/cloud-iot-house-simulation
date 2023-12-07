@@ -4,16 +4,14 @@ import jakarta.persistence.EntityExistsException;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.hibernate.exception.ConstraintViolationException;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.itmo.zavar.dto.DeviceDTO;
 import ru.itmo.zavar.dto.TypeDTO;
 import ru.itmo.zavar.entity.DeviceEntity;
 import ru.itmo.zavar.entity.TypeEntity;
-import ru.itmo.zavar.repository.DeviceRepository;
-import ru.itmo.zavar.repository.TypeRepository;
+import ru.itmo.zavar.repo.DeviceRepository;
+import ru.itmo.zavar.repo.TypeRepository;
 import ru.itmo.zavar.service.DeviceService;
 
 import java.util.ArrayList;
