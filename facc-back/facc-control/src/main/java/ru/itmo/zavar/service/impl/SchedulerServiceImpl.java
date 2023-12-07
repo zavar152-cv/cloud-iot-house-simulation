@@ -19,12 +19,12 @@ import ru.itmo.zavar.job.curtains.CurtainsJob;
 import ru.itmo.zavar.job.light.LightJob;
 import ru.itmo.zavar.job.music.MusicJob;
 import ru.itmo.zavar.job.speakers.SpeakersJob;
-import ru.itmo.zavar.repository.ActionRepository;
-import ru.itmo.zavar.repository.DeviceRepository;
-import ru.itmo.zavar.repository.TimetableEntryRepository;
-import ru.itmo.zavar.service.SchedulerService;
 import ru.itmo.zavar.model.JobGroup;
 import ru.itmo.zavar.model.JobStatus;
+import ru.itmo.zavar.repo.ActionRepository;
+import ru.itmo.zavar.repo.DeviceRepository;
+import ru.itmo.zavar.repo.TimetableEntryRepository;
+import ru.itmo.zavar.service.SchedulerService;
 
 import java.util.ArrayList;
 import java.util.Date;

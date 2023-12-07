@@ -6,7 +6,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.itmo.zavar.dto.CommandForActionDTO;
 import ru.itmo.zavar.entity.CommandForActionEntity;
-import ru.itmo.zavar.repository.CommandForActionRepository;
+import ru.itmo.zavar.repo.CommandForActionRepository;
 import ru.itmo.zavar.service.CommandForActionService;
 
 import java.util.ArrayList;

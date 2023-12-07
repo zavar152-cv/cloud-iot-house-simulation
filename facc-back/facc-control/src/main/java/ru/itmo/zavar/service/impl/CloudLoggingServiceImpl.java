@@ -28,7 +28,6 @@ public class CloudLoggingServiceImpl implements CloudLoggingService {
     @Value("${yandex.log-group-id}")
     private String logGroupId;
     private LogIngestionServiceGrpc.LogIngestionServiceBlockingStub logIngestionServiceBlockingStub;
-
     @PostConstruct
     public void init() {
         logIngestionServiceBlockingStub = serviceFactory.create(LogIngestionServiceGrpc.LogIngestionServiceBlockingStub.class,

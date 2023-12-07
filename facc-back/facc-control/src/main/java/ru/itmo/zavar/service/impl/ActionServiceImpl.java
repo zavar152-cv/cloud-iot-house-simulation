@@ -6,13 +6,12 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.itmo.zavar.dto.ActionDTO;
 import ru.itmo.zavar.entity.ActionEntity;
-import ru.itmo.zavar.repository.ActionRepository;
+import ru.itmo.zavar.repo.ActionRepository;
 import ru.itmo.zavar.service.ActionService;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.NoSuchElementException;
-import java.util.Optional;
 
 @Service
 @Transactional
