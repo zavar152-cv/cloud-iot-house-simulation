@@ -20,7 +20,7 @@ import java.util.Date;
 public class JobScheduleCreator {
 
     public JobDetail createJob(Class<? extends QuartzJobBean> jobClass, boolean isDurable,
-                               ApplicationContext context, String jobName, String jobGroup, Long id) {
+                               ApplicationContext context, String jobName, String jobGroup, String deviceId, Long id) {
         JobDetailFactoryBean factoryBean = new JobDetailFactoryBean();
         factoryBean.setJobClass(jobClass);
         factoryBean.setDurability(isDurable);
@@ -34,6 +34,7 @@ public class JobScheduleCreator {
         jobDataMap.put("group", jobGroup);
         jobDataMap.put("name", jobName);
         jobDataMap.put("class", jobClass.getName());
+        jobDataMap.put("deviceId", deviceId);
         jobDataMap.put("id", id);
         factoryBean.setJobDataMap(jobDataMap);
         factoryBean.afterPropertiesSet();

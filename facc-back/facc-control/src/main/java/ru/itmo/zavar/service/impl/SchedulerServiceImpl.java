@@ -95,7 +95,7 @@ public class SchedulerServiceImpl implements SchedulerService {
                         .arguments(arguments)
                         .jobGroup(group).build();
                 TimetableEntryEntity savedEntry = timetableEntryRepository.save(entryEntity);
-                jobDetail = scheduleCreator.createJob(jobClass, false, context, name, group.name(), savedEntry.getId());
+                jobDetail = scheduleCreator.createJob(jobClass, false, context, name, group.name(), deviceEntity.getId(), savedEntry.getId());
 
                 jobDetail.getJobDataMap().put("arguments", arguments);
                 jobDetail.getJobDataMap().put("action", actionEntity.getAction());
@@ -252,7 +252,7 @@ public class SchedulerServiceImpl implements SchedulerService {
         Scheduler scheduler = schedulerFactoryBean.getScheduler();
         allEntries.forEach(timetableEntry -> {
             Class<? extends QuartzJobBean> jobClass = getClassByGroup(timetableEntry.getGroup());
-            JobDetail jobDetail = scheduleCreator.createJob(jobClass, false, context, timetableEntry.getName(), timetableEntry.getGroup().name(), timetableEntry.getId());
+            JobDetail jobDetail = scheduleCreator.createJob(jobClass, false, context, timetableEntry.getName(), timetableEntry.getGroup().name(), timetableEntry.getDeviceId(), timetableEntry.getId());
 
             jobDetail.getJobDataMap().put("arguments", timetableEntry.getArguments());
             jobDetail.getJobDataMap().put("action", timetableEntry.getActionName());

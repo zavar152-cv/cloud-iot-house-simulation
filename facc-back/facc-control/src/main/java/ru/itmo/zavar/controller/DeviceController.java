@@ -21,6 +21,7 @@ import ru.itmo.zavar.service.DeviceService;
 
 import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/device")
@@ -94,10 +95,13 @@ public class DeviceController {
     }
 
     @PutMapping("/devices/{id}")
-    public ResponseEntity<?> updateDevice(@Valid @RequestBody DeviceDTO.Request.UpdateDevice updateDevice,
-                                          @PathVariable @Positive @NotNull String id) {
+    public ResponseEntity<?> updateDevice(@Valid @RequestBody(required = false) DeviceDTO.Request.UpdateDevice updateDevice,
+                                          @PathVariable @Positive @NotNull String id, @RequestParam("status") Optional<Boolean> status) {
         try {
-            deviceService.updateDevice(id, updateDevice.getName());
+            if(updateDevice != null) {
+                deviceService.updateDevice(id, updateDevice.getName());
+            }
+            status.ifPresent(aBoolean -> deviceService.changeDeviceStatus(id, aBoolean));
         } catch (EntityNotFoundException e) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
         }

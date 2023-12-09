@@ -9,7 +9,10 @@ import org.springframework.transaction.annotation.Transactional;
 import ru.itmo.zavar.dto.DeviceDTO;
 import ru.itmo.zavar.dto.TypeDTO;
 import ru.itmo.zavar.entity.DeviceEntity;
+import ru.itmo.zavar.entity.DeviceOnEntity;
 import ru.itmo.zavar.entity.TypeEntity;
+import ru.itmo.zavar.model.JobGroup;
+import ru.itmo.zavar.repo.DeviceOnRepository;
 import ru.itmo.zavar.repo.DeviceRepository;
 import ru.itmo.zavar.repo.TypeRepository;
 import ru.itmo.zavar.service.DeviceService;
@@ -17,6 +20,7 @@ import ru.itmo.zavar.service.DeviceService;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.stream.Stream;
 
 @Service
 @Transactional
@@ -25,6 +29,7 @@ import java.util.NoSuchElementException;
 public class DeviceServiceImpl implements DeviceService {
     private final DeviceRepository deviceRepository;
     private final TypeRepository typeRepository;
+    private final DeviceOnRepository deviceOnRepository;
 
     @Override
     public void createDevice(String id, String name, Long typeId) throws EntityNotFoundException, EntityExistsException {
@@ -46,6 +51,18 @@ public class DeviceServiceImpl implements DeviceService {
         DeviceEntity deviceEntity = deviceRepository.findById(id).orElseThrow();
         deviceEntity.setName(name);
         deviceRepository.save(deviceEntity);
+    }
+
+    @Override
+    public void changeDeviceStatus(String id, Boolean status) throws NoSuchElementException {
+        DeviceEntity deviceEntity = deviceRepository.findById(id).orElseThrow();
+        deviceEntity.setStatus(status);
+        deviceRepository.save(deviceEntity);
+        if(status) {
+            deviceOnRepository.save(DeviceOnEntity.builder().device(deviceEntity).build());
+        } else {
+            deviceOnRepository.deleteByDevice_Id(deviceEntity.getId());
+        }
     }
 
     @Override
@@ -81,5 +98,10 @@ public class DeviceServiceImpl implements DeviceService {
     public TypeDTO.Response.Type getTypeById(Long id) throws NoSuchElementException {
         TypeEntity typeEntity = typeRepository.findById(id).orElseThrow();
         return new TypeDTO.Response.Type(typeEntity.getId(), typeEntity.getName());
+    }
+
+    @Override
+    public List<String> getAllGroups() {
+        return Stream.of(JobGroup.values()).map(Enum::name).toList();
     }
 }
