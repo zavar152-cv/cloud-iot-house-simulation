@@ -1,5 +1,5 @@
 server:
-  port: 25566
+  port: 8080
   error:
     include-message: always
     include-stacktrace: never
@@ -13,7 +13,7 @@ spring:
     generate-ddl: true
     properties:
       hibernate:
-        show_sql: true
+        show_sql: false
     hibernate:
       ddl-auto: update
   datasource:
@@ -25,7 +25,10 @@ spring:
     log-resolved-exception: true
 logging:
   level:
-    sql: debug
+    sql: off
+status:
+  enabled: "Enabled"
+  disabled: "Disabled"
 yandex:
   auth-key-file: /authorized_key.json
   log-group-id: e232s1431gbklopopjth

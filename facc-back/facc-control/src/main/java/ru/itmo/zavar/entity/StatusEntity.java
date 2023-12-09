@@ -15,7 +15,6 @@ import lombok.NoArgsConstructor;
 @Table(name = "statuses")
 public class StatusEntity {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @NotBlank

@@ -5,6 +5,7 @@ import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.quartz.*;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationContext;
 import org.springframework.scheduling.quartz.QuartzJobBean;
 import org.springframework.scheduling.quartz.SchedulerFactoryBean;
@@ -12,24 +13,17 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.itmo.zavar.component.JobScheduleCreator;
 import ru.itmo.zavar.dto.TimetableEntryDTO;
-import ru.itmo.zavar.entity.ActionEntity;
-import ru.itmo.zavar.entity.DeviceEntity;
-import ru.itmo.zavar.entity.TimetableEntryEntity;
+import ru.itmo.zavar.entity.*;
 import ru.itmo.zavar.job.curtains.CurtainsJob;
 import ru.itmo.zavar.job.light.LightJob;
 import ru.itmo.zavar.job.music.MusicJob;
 import ru.itmo.zavar.job.speakers.SpeakersJob;
 import ru.itmo.zavar.model.JobGroup;
 import ru.itmo.zavar.model.JobStatus;
-import ru.itmo.zavar.repo.ActionRepository;
-import ru.itmo.zavar.repo.DeviceRepository;
-import ru.itmo.zavar.repo.TimetableEntryRepository;
+import ru.itmo.zavar.repo.*;
 import ru.itmo.zavar.service.SchedulerService;
 
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.NoSuchElementException;
+import java.util.*;
 
 @Service
 @Transactional
@@ -43,29 +37,36 @@ public class SchedulerServiceImpl implements SchedulerService {
     private final ActionRepository actionRepository;
     private final ApplicationContext context;
     private final JobScheduleCreator scheduleCreator;
+    private final StateRepository stateRepository;
+    private final StatusRepository statusRepository;
+    @Value("${status.enabled}")
+    private String enabledStatus;
+    @Value("${status.disabled}")
+    private String disabledStatus;
+    private boolean simulationEnabled = false;
 
     @PostConstruct
+    @Transactional
     public void loadAndScheduleTimetableEntries() {
-        List<TimetableEntryDTO.Response.TimetableEntry> allEntries = getAllEntries();
-        log.info("Loaded {} timetable entries", allEntries.size());
-        Scheduler scheduler = schedulerFactoryBean.getScheduler();
-        allEntries.forEach(timetableEntry -> {
-            Class<? extends QuartzJobBean> jobClass = getClassByGroup(timetableEntry.getGroup());
-            JobDetail jobDetail = scheduleCreator.createJob(jobClass, false, context, timetableEntry.getName(), timetableEntry.getGroup().name(), timetableEntry.getId());
 
-            jobDetail.getJobDataMap().put("arguments", timetableEntry.getArguments());
-            jobDetail.getJobDataMap().put("action", timetableEntry.getActionName());
+        statusRepository.save(new StatusEntity(1L, enabledStatus));
+        statusRepository.save(new StatusEntity(2L, disabledStatus));
+        Optional<StateEntity> optionalStateEntity = stateRepository.findById(1L);
 
-            Trigger trigger = scheduleCreator.createCronTrigger(timetableEntry.getName(), new Date(),
-                    timetableEntry.getCronExpression(), SimpleTrigger.MISFIRE_INSTRUCTION_FIRE_NOW);
-            try {
-                scheduler.scheduleJob(jobDetail, trigger);
-            } catch (SchedulerException e) {
-                log.error(e.getMessage(), e);
+        if (optionalStateEntity.isEmpty()) {
+            statusRepository.findById(2L).ifPresent(statusEntity -> {
+                stateRepository.save(new StateEntity(1L, statusEntity));
+            });
+        } else {
+            StateEntity stateEntity = optionalStateEntity.get();
+            if (stateEntity.getSimulationStatus().getName().equals(disabledStatus)) {
+                disableSimulation();
+            } else if(stateEntity.getSimulationStatus().getName().equals(enabledStatus)) {
+                enableSimulation();
             }
-            log.info("job {} with id {} scheduled", timetableEntry.getName(), timetableEntry.getId());
-        });
+        }
     }
+
 
     @Override
     public void createTimetableEntry(String name, JobGroup group, String cronExpression, String description, String deviceId, Long actionId, List<String> arguments) throws SchedulerException, IllegalArgumentException, EntityNotFoundException {
@@ -73,7 +74,7 @@ public class SchedulerServiceImpl implements SchedulerService {
         ActionEntity actionEntity = actionRepository.findById(actionId).orElseThrow(() -> new EntityNotFoundException("Action not found"));
         Class<? extends QuartzJobBean> jobClass = getClassByGroup(group);
 
-        if(actionEntity.getArgumentsCount() != arguments.size())
+        if (actionEntity.getArgumentsCount() != arguments.size())
             throw new IllegalArgumentException("Check arguments count");
 
         try {
@@ -103,6 +104,9 @@ public class SchedulerServiceImpl implements SchedulerService {
                         cronExpression, SimpleTrigger.MISFIRE_INSTRUCTION_FIRE_NOW);
                 scheduler.scheduleJob(jobDetail, trigger);
                 log.info("job {} with id {} scheduled", savedEntry.getName(), savedEntry.getId());
+                if(!simulationEnabled) {
+                    pauseJob(savedEntry.getId());
+                }
             } else {
                 log.error("scheduleNewJobRequest.jobAlreadyExist");
                 throw new IllegalArgumentException("Job is already exists");
@@ -149,7 +153,7 @@ public class SchedulerServiceImpl implements SchedulerService {
             TimetableEntryEntity timetableEntryEntity = timetableEntryRepository.findById(id).orElseThrow();
             boolean deleted = schedulerFactoryBean.getScheduler().deleteJob(new JobKey(timetableEntryEntity.getName(),
                     timetableEntryEntity.getJobGroup().name()));
-            if(deleted) {
+            if (deleted) {
                 timetableEntryRepository.deleteById(id);
                 log.info("job {} with id {} deleted", timetableEntryEntity.getName(), timetableEntryEntity.getId());
             } else {
@@ -166,7 +170,7 @@ public class SchedulerServiceImpl implements SchedulerService {
     public void pauseJob(Long id) throws NoSuchElementException, SchedulerException, IllegalStateException {
         try {
             TimetableEntryEntity timetableEntryEntity = timetableEntryRepository.findById(id).orElseThrow();
-            if(timetableEntryEntity.getJobStatus().equals(JobStatus.PAUSED))
+            if (timetableEntryEntity.getJobStatus().equals(JobStatus.PAUSED))
                 throw new IllegalStateException("Job was paused yet");
             schedulerFactoryBean.getScheduler().pauseJob(new JobKey(timetableEntryEntity.getName(),
                     timetableEntryEntity.getJobGroup().name()));
@@ -183,7 +187,7 @@ public class SchedulerServiceImpl implements SchedulerService {
     public void resumeJob(Long id) throws NoSuchElementException, IllegalStateException, SchedulerException {
         try {
             TimetableEntryEntity timetableEntryEntity = timetableEntryRepository.findById(id).orElseThrow();
-            if(!timetableEntryEntity.getJobStatus().equals(JobStatus.PAUSED))
+            if (!timetableEntryEntity.getJobStatus().equals(JobStatus.PAUSED))
                 throw new IllegalStateException("Job isn't paused now");
             schedulerFactoryBean.getScheduler().resumeJob(new JobKey(timetableEntryEntity.getName(),
                     timetableEntryEntity.getJobGroup().name()));
@@ -200,7 +204,7 @@ public class SchedulerServiceImpl implements SchedulerService {
     public void startJob(Long id) throws NoSuchElementException, IllegalStateException, SchedulerException {
         try {
             TimetableEntryEntity timetableEntryEntity = timetableEntryRepository.findById(id).orElseThrow();
-            if(timetableEntryEntity.getJobStatus().equals(JobStatus.EXECUTING))
+            if (timetableEntryEntity.getJobStatus().equals(JobStatus.EXECUTING))
                 throw new IllegalStateException("Job is executing now");
             schedulerFactoryBean.getScheduler().triggerJob(new JobKey(timetableEntryEntity.getName(),
                     timetableEntryEntity.getJobGroup().name()));
@@ -235,5 +239,53 @@ public class SchedulerServiceImpl implements SchedulerService {
                 entry.getDevice().getId(), entry.getAction().getId(),
                 entry.getDevice().getName(), entry.getAction().getAction(),
                 entry.getArguments());
+    }
+
+    @Override
+    public void enableSimulation() {
+        statusRepository.findById(1L).ifPresent(statusEntity -> {
+            stateRepository.save(new StateEntity(1L, statusEntity));
+        });
+        simulationEnabled = true;
+        List<TimetableEntryDTO.Response.TimetableEntry> allEntries = getAllEntries();
+        log.info("Loaded {} timetable entries", allEntries.size());
+        Scheduler scheduler = schedulerFactoryBean.getScheduler();
+        allEntries.forEach(timetableEntry -> {
+            Class<? extends QuartzJobBean> jobClass = getClassByGroup(timetableEntry.getGroup());
+            JobDetail jobDetail = scheduleCreator.createJob(jobClass, false, context, timetableEntry.getName(), timetableEntry.getGroup().name(), timetableEntry.getId());
+
+            jobDetail.getJobDataMap().put("arguments", timetableEntry.getArguments());
+            jobDetail.getJobDataMap().put("action", timetableEntry.getActionName());
+
+            Trigger trigger = scheduleCreator.createCronTrigger(timetableEntry.getName(), new Date(),
+                    timetableEntry.getCronExpression(), SimpleTrigger.MISFIRE_INSTRUCTION_FIRE_NOW);
+            try {
+                scheduler.scheduleJob(jobDetail, trigger);
+                timetableEntryRepository.findById(timetableEntry.getId()).ifPresent(entry -> {
+                    entry.setJobStatus(JobStatus.SCHEDULED);
+                    timetableEntryRepository.save(entry);
+                });
+            } catch (SchedulerException e) {
+                log.error(e.getMessage(), e);
+            }
+            log.info("job {} with id {} scheduled", timetableEntry.getName(), timetableEntry.getId());
+        });
+    }
+
+    @Override
+    public void disableSimulation() {
+        statusRepository.findById(2L).ifPresent(statusEntity -> {
+            stateRepository.save(new StateEntity(1L, statusEntity));
+        });
+        simulationEnabled = false;
+        Iterable<TimetableEntryEntity> all = timetableEntryRepository.findAll();
+        all.forEach(entry -> {
+            try {
+                schedulerFactoryBean.getScheduler().deleteJob(new JobKey(entry.getName(),
+                        entry.getJobGroup().name()));
+            } catch (SchedulerException e) {
+                throw new RuntimeException(e);
+            }
+        });
     }
 }
