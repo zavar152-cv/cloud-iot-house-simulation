@@ -24,4 +24,8 @@ public interface SchedulerService {
     List<TimetableEntryDTO.Response.TimetableEntry> getAllEntries();
 
     TimetableEntryDTO.Response.TimetableEntry getEntryById(Long id) throws NoSuchElementException;
+
+    void enableSimulation();
+
+    void disableSimulation();
 }

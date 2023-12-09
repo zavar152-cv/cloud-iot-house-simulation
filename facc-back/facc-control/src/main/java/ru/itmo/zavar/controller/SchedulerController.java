@@ -7,6 +7,7 @@ import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.quartz.SchedulerException;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -24,6 +25,23 @@ import java.util.NoSuchElementException;
 @Slf4j(topic = "SchedulerController")
 public class SchedulerController {
     private final SchedulerService schedulerService;
+    @Value("${status.enabled}")
+    private String enabledStatus;
+    @Value("${status.disabled}")
+    private String disabledStatus;
+
+    @PutMapping("")
+    public ResponseEntity<?> changeState(@RequestParam("state") String state) {
+        if(state.equals(enabledStatus)) {
+            schedulerService.enableSimulation();
+            return ResponseEntity.ok().build();
+        } else if(state.equals(disabledStatus)) {
+            schedulerService.disableSimulation();
+            return ResponseEntity.ok().build();
+        } else {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+        }
+    }
 
     @GetMapping("/timetable-entries")
     public ResponseEntity<List<TimetableEntryDTO.Response.TimetableEntry>> getAllTimetableEntries() {
