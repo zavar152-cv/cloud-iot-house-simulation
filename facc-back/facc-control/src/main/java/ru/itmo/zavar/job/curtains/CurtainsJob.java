@@ -10,6 +10,7 @@ import org.springframework.scheduling.quartz.QuartzJobBean;
 import org.springframework.stereotype.Component;
 import ru.itmo.zavar.entity.TimetableEntryEntity;
 import ru.itmo.zavar.model.JobStatus;
+import ru.itmo.zavar.repo.DeviceOnRepository;
 import ru.itmo.zavar.repo.TimetableEntryRepository;
 
 import java.util.List;
@@ -21,10 +22,16 @@ import java.util.Optional;
 public class CurtainsJob extends QuartzJobBean {
     @Autowired
     private TimetableEntryRepository timetableEntryRepository;
+    @Autowired
+    private DeviceOnRepository deviceOnRepository;
 
     @Override
     protected void executeInternal(@NonNull JobExecutionContext context) throws JobExecutionException {
         Long id = (Long) context.getMergedJobDataMap().get("id");
+        String deviceId = (String) context.getMergedJobDataMap().get("deviceId");
+        if(deviceOnRepository.findByDevice_Id(deviceId).isEmpty()) {
+            return;
+        }
         TimetableEntryEntity timetableEntryEntity = timetableEntryRepository.findById(id).orElseThrow();
         timetableEntryEntity.setJobStatus(JobStatus.EXECUTING);
         log.info("Set {} status to job with id {}", JobStatus.EXECUTING, id);
