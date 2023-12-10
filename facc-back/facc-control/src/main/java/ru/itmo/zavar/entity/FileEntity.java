@@ -13,19 +13,15 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
-@Table(name = "commands_for_actions")
-public class CommandForActionEntity {
+@Table(name = "files")
+public class FileEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-
     @NotBlank
-    private String command;
-
-    @ManyToOne(fetch = FetchType.EAGER)
+    @Column(unique = true)
+    private String name;
+    @Lob
     @NotNull
-    private ActionEntity action;
-
-    @OneToOne(fetch = FetchType.EAGER)
-    private FileEntity file;
+    private byte[] content;
 }

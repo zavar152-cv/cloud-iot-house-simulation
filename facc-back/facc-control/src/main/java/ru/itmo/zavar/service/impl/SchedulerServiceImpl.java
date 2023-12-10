@@ -22,7 +22,10 @@ import ru.itmo.zavar.model.JobGroup;
 import ru.itmo.zavar.model.JobStatus;
 import ru.itmo.zavar.repo.*;
 import ru.itmo.zavar.service.SchedulerService;
+import ru.itmo.zavar.service.SpeechKitService;
 
+import javax.sound.sampled.UnsupportedAudioFileException;
+import java.io.IOException;
 import java.util.*;
 
 @Service
@@ -39,6 +42,7 @@ public class SchedulerServiceImpl implements SchedulerService {
     private final JobScheduleCreator scheduleCreator;
     private final StateRepository stateRepository;
     private final StatusRepository statusRepository;
+    private final SpeechKitService speechKitService;
     @Value("${status.enabled}")
     private String enabledStatus;
     @Value("${status.disabled}")
@@ -98,7 +102,7 @@ public class SchedulerServiceImpl implements SchedulerService {
                 jobDetail = scheduleCreator.createJob(jobClass, false, context, name, group.name(), deviceEntity.getId(), savedEntry.getId());
 
                 jobDetail.getJobDataMap().put("arguments", arguments);
-                jobDetail.getJobDataMap().put("action", actionEntity.getAction());
+                jobDetail.getJobDataMap().put("action", actionEntity.getId());
 
                 Trigger trigger = scheduleCreator.createCronTrigger(name, new Date(),
                         cronExpression, SimpleTrigger.MISFIRE_INSTRUCTION_FIRE_NOW);
@@ -243,6 +247,8 @@ public class SchedulerServiceImpl implements SchedulerService {
 
     @Override
     public void enableSimulation() {
+        if (simulationEnabled)
+            return;
         statusRepository.findById(1L).ifPresent(statusEntity -> {
             stateRepository.save(new StateEntity(1L, statusEntity));
         });
@@ -255,7 +261,7 @@ public class SchedulerServiceImpl implements SchedulerService {
             JobDetail jobDetail = scheduleCreator.createJob(jobClass, false, context, timetableEntry.getName(), timetableEntry.getGroup().name(), timetableEntry.getDeviceId(), timetableEntry.getId());
 
             jobDetail.getJobDataMap().put("arguments", timetableEntry.getArguments());
-            jobDetail.getJobDataMap().put("action", timetableEntry.getActionName());
+            jobDetail.getJobDataMap().put("action", timetableEntry.getActionId());
 
             Trigger trigger = scheduleCreator.createCronTrigger(timetableEntry.getName(), new Date(),
                     timetableEntry.getCronExpression(), SimpleTrigger.MISFIRE_INSTRUCTION_FIRE_NOW);
@@ -274,6 +280,8 @@ public class SchedulerServiceImpl implements SchedulerService {
 
     @Override
     public void disableSimulation() {
+        if (!simulationEnabled)
+            return;
         statusRepository.findById(2L).ifPresent(statusEntity -> {
             stateRepository.save(new StateEntity(1L, statusEntity));
         });
