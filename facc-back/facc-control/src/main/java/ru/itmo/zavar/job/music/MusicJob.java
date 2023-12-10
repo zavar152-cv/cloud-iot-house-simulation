@@ -29,7 +29,7 @@ public class MusicJob extends QuartzJobBean {
     protected void executeInternal(@NonNull JobExecutionContext context) throws JobExecutionException {
         Long id = (Long) context.getMergedJobDataMap().get("id");
         String deviceId = (String) context.getMergedJobDataMap().get("deviceId");
-        if(deviceOnRepository.findByDevice_Id(deviceId).isEmpty()) {
+        if (deviceOnRepository.findByDevice_Id(deviceId).isEmpty()) {
             return;
         }
         TimetableEntryEntity timetableEntryEntity = timetableEntryRepository.findById(id).orElseThrow();
@@ -39,15 +39,15 @@ public class MusicJob extends QuartzJobBean {
 
         List<String> arguments = (List<String>) context.getMergedJobDataMap().get("arguments");
         String action = (String) context.getMergedJobDataMap().get("action");
-        if(arguments.isEmpty())
+        if (arguments.isEmpty())
             log.info("Executing job with action {}", action);
         else
             log.info("Executing job with arguments {} and action {}", String.join(", ", arguments), action);
 
         Optional<TimetableEntryEntity> optionalTimetableEntry = timetableEntryRepository.findById(id);
-        if(optionalTimetableEntry.isPresent()) {
+        if (optionalTimetableEntry.isPresent()) {
             timetableEntryEntity = optionalTimetableEntry.get();
-            if(timetableEntryEntity.getJobStatus().equals(JobStatus.PAUSED)) {
+            if (timetableEntryEntity.getJobStatus().equals(JobStatus.PAUSED)) {
                 log.warn("Job with id {} was paused while executing", id);
             } else {
                 timetableEntryEntity.setJobStatus(JobStatus.SCHEDULED);

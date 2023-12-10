@@ -31,6 +31,7 @@ public enum CommandForActionDTO {
 
     public enum Response {
         ;
+
         @Value
         public static class CommandForAction implements Command, ActionId, ActionName {
             String command;

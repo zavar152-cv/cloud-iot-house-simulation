@@ -37,6 +37,7 @@ public enum ActionDTO {
 
     public enum Response {
         ;
+
         @Value
         public static class Action implements Id, Name, Group, ArgumentsCount {
             Long id;

@@ -58,8 +58,9 @@ public class DeviceServiceImpl implements DeviceService {
         DeviceEntity deviceEntity = deviceRepository.findById(id).orElseThrow();
         deviceEntity.setStatus(status);
         deviceRepository.save(deviceEntity);
-        if(status) {
-            deviceOnRepository.save(DeviceOnEntity.builder().device(deviceEntity).build());
+        if (status) {
+            if(deviceOnRepository.findByDevice_Id(deviceEntity.getId()).isEmpty())
+                deviceOnRepository.save(DeviceOnEntity.builder().device(deviceEntity).build());
         } else {
             deviceOnRepository.deleteByDevice_Id(deviceEntity.getId());
         }
