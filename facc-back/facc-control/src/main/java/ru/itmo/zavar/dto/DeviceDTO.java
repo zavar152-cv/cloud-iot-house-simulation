@@ -37,6 +37,7 @@ public enum DeviceDTO {
 
     public enum Request {
         ;
+
         @Value
         public static class CreateNewDevice implements Id, Name, TypeId {
             String id;
@@ -59,6 +60,7 @@ public enum DeviceDTO {
 
     public enum Response {
         ;
+
         @Value
         public static class Device implements Id, Name, Type, Status {
             String id;

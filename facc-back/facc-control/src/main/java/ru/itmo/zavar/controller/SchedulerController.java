@@ -16,7 +16,6 @@ import ru.itmo.zavar.dto.TimetableEntryDTO;
 import ru.itmo.zavar.service.SchedulerService;
 
 import java.util.List;
-import java.util.Map;
 import java.util.NoSuchElementException;
 
 @RestController
@@ -32,10 +31,10 @@ public class SchedulerController {
 
     @PutMapping("")
     public ResponseEntity<?> changeState(@RequestParam("state") String state) {
-        if(state.equals(enabledStatus)) {
+        if (state.equals(enabledStatus)) {
             schedulerService.enableSimulation();
             return ResponseEntity.ok().build();
-        } else if(state.equals(disabledStatus)) {
+        } else if (state.equals(disabledStatus)) {
             schedulerService.disableSimulation();
             return ResponseEntity.ok().build();
         } else {
@@ -91,7 +90,7 @@ public class SchedulerController {
     public ResponseEntity<?> deleteTimetableEntry(@PathVariable @Positive @NotNull Long id) {
         try {
             boolean deleted = schedulerService.deleteTimetableEntry(id);
-            if(deleted)
+            if (deleted)
                 return ResponseEntity.ok().build();
             else
                 throw new ResponseStatusException(HttpStatus.CONFLICT);

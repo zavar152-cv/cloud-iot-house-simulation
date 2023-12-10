@@ -26,6 +26,7 @@ public enum TypeDTO {
 
     public enum Response {
         ;
+
         @Value
         public static class Type implements Id, Name {
             Long id;

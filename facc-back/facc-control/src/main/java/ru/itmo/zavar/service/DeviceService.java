@@ -4,7 +4,6 @@ import jakarta.persistence.EntityExistsException;
 import jakarta.persistence.EntityNotFoundException;
 import ru.itmo.zavar.dto.DeviceDTO;
 import ru.itmo.zavar.dto.TypeDTO;
-import ru.itmo.zavar.model.JobGroup;
 
 import java.util.List;
 import java.util.NoSuchElementException;

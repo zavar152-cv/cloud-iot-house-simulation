@@ -71,6 +71,7 @@ public enum TimetableEntryDTO {
 
     public enum Request {
         ;
+
         @Value
         public static class CreateNewEntry implements Name, Group, CronExpression, Description, DeviceId, ActionId, Arguments {
             String name;
@@ -81,6 +82,7 @@ public enum TimetableEntryDTO {
             Long actionId;
             List<String> arguments;
         }
+
         @Value
         public static class UpdateEntry implements Name, CronExpression, Description, ActionId, Arguments {
             String name;
@@ -93,6 +95,7 @@ public enum TimetableEntryDTO {
 
     public enum Response {
         ;
+
         @Value
         public static class TimetableEntry implements Id, Group, Name, CronExpression, Description, DeviceId, ActionId, DeviceName, ActionName, Arguments {
             Long id;

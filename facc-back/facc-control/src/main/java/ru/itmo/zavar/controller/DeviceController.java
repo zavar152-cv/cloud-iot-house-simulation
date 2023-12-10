@@ -32,6 +32,12 @@ public class DeviceController {
     private final ActionService actionService;
     private final CommandForActionService commandForActionService;
 
+    @GetMapping("/groups")
+    public ResponseEntity<List<String>> getAllGroups() {
+        var all = deviceService.getAllGroups();
+        return ResponseEntity.ok(all);
+    }
+
     @GetMapping("/actions")
     public ResponseEntity<List<ActionDTO.Response.Action>> getAllActions() {
         var all = actionService.getAllActions();
@@ -98,7 +104,7 @@ public class DeviceController {
     public ResponseEntity<?> updateDevice(@Valid @RequestBody(required = false) DeviceDTO.Request.UpdateDevice updateDevice,
                                           @PathVariable @Positive @NotNull String id, @RequestParam("status") Optional<Boolean> status) {
         try {
-            if(updateDevice != null) {
+            if (updateDevice != null) {
                 deviceService.updateDevice(id, updateDevice.getName());
             }
             status.ifPresent(aBoolean -> deviceService.changeDeviceStatus(id, aBoolean));

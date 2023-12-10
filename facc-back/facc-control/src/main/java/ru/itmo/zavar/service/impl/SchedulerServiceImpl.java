@@ -61,7 +61,7 @@ public class SchedulerServiceImpl implements SchedulerService {
             StateEntity stateEntity = optionalStateEntity.get();
             if (stateEntity.getSimulationStatus().getName().equals(disabledStatus)) {
                 disableSimulation();
-            } else if(stateEntity.getSimulationStatus().getName().equals(enabledStatus)) {
+            } else if (stateEntity.getSimulationStatus().getName().equals(enabledStatus)) {
                 enableSimulation();
             }
         }
@@ -104,7 +104,7 @@ public class SchedulerServiceImpl implements SchedulerService {
                         cronExpression, SimpleTrigger.MISFIRE_INSTRUCTION_FIRE_NOW);
                 scheduler.scheduleJob(jobDetail, trigger);
                 log.info("job {} with id {} scheduled", savedEntry.getName(), savedEntry.getId());
-                if(!simulationEnabled) {
+                if (!simulationEnabled) {
                     pauseJob(savedEntry.getId());
                 }
             } else {

@@ -1,7 +1,6 @@
 package ru.itmo.zavar.service;
 
 import ru.itmo.zavar.dto.ActionDTO;
-import ru.itmo.zavar.dto.CommandForActionDTO;
 
 import java.util.List;
 import java.util.NoSuchElementException;
