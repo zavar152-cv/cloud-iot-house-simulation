@@ -56,7 +56,7 @@ public class SpeechKitServiceImpl implements SpeechKitService {
         requestObserver.onCompleted();
         log.info("Done sending");
         cloudLoggingService.log(LogEntryOuterClass.LogLevel.Level.INFO, "SpeechKitService", "Done sending");
-        return responseObserver.awaitResult(5);
+        return responseObserver.awaitResult();
     }
 
     @Override
@@ -79,7 +79,9 @@ public class SpeechKitServiceImpl implements SpeechKitService {
         cloudLoggingService.log(LogEntryOuterClass.LogLevel.Level.INFO, "SpeechKitService", "Sending synthesize request");
         ttsClient.utteranceSynthesis(request, observer);
         log.info("Done sending");
-        var bytes = observer.awaitResult(5000);
+        cloudLoggingService.log(LogEntryOuterClass.LogLevel.Level.INFO, "SpeechKitService", "Done sending");
+
+        var bytes = observer.awaitResult();
 
         var audioStream = AudioSystem.getAudioInputStream(new ByteArrayInputStream(bytes));
 
@@ -92,7 +94,7 @@ public class SpeechKitServiceImpl implements SpeechKitService {
     private static class TtsStreamObserver implements StreamObserver<Tts.UtteranceSynthesisResponse> {
 
         private final ByteArrayOutputStream result = new ByteArrayOutputStream();
-        private static final CountDownLatch count = new CountDownLatch(1);
+        private static CountDownLatch count = new CountDownLatch(1);
         private final CloudLoggingService cloudLoggingService;
         private final Logger log;
 
@@ -121,12 +123,13 @@ public class SpeechKitServiceImpl implements SpeechKitService {
             count.countDown();
         }
 
-        public byte[] awaitResult(int timeoutSeconds) {
+        public byte[] awaitResult() {
             try {
-                count.await(timeoutSeconds, TimeUnit.SECONDS);
+                count.await();
             } catch (InterruptedException e) {
                 throw new RuntimeException(e);
             }
+            count = new CountDownLatch(1);
             return result.toByteArray();
         }
     }
@@ -135,7 +138,7 @@ public class SpeechKitServiceImpl implements SpeechKitService {
     private static class SttStreamObserver implements StreamObserver<Stt.StreamingResponse> {
 
         private final StringBuilder result = new StringBuilder();
-        private static final CountDownLatch count = new CountDownLatch(1);
+        private static CountDownLatch count = new CountDownLatch(1);
         private final CloudLoggingService cloudLoggingService;
         private final Logger log;
 
@@ -159,12 +162,13 @@ public class SpeechKitServiceImpl implements SpeechKitService {
             count.countDown();
         }
 
-        public String awaitResult(int timeoutSeconds) {
+        public String awaitResult() {
             try {
-                count.await(timeoutSeconds, TimeUnit.SECONDS);
+                count.await();
             } catch (InterruptedException e) {
                 throw new RuntimeException(e);
             }
+            count = new CountDownLatch(1);
             return result.toString();
         }
     }

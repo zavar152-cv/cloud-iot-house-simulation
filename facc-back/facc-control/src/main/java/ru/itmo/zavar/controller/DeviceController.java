@@ -11,10 +11,12 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 import ru.itmo.zavar.dto.ActionDTO;
 import ru.itmo.zavar.dto.CommandForActionDTO;
 import ru.itmo.zavar.dto.DeviceDTO;
+import ru.itmo.zavar.exception.StorageException;
 import ru.itmo.zavar.service.ActionService;
 import ru.itmo.zavar.service.CommandForActionService;
 import ru.itmo.zavar.service.DeviceService;
@@ -61,12 +63,39 @@ public class DeviceController {
     }
 
     @GetMapping("/commands-for-actions/{id}")
-    public ResponseEntity<CommandForActionDTO.Response.CommandForAction> getCommandForActionById(@PathVariable @Positive @NotNull String id) {
+    public ResponseEntity<CommandForActionDTO.Response.CommandForAction> getCommandForActionById(@PathVariable @Positive @NotNull Long id) {
         try {
             var action = commandForActionService.getCommandForAction(id);
             return ResponseEntity.ok(action);
         } catch (NoSuchElementException e) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
+        }
+    }
+
+    @PostMapping("/commands-for-actions/{id}/file")
+    public ResponseEntity<?> uploadFile(@RequestParam("file") MultipartFile file, @PathVariable @Positive @NotNull Long id) {
+        try {
+            commandForActionService.attachFile(id, file);
+            return ResponseEntity.ok().build();
+        } catch (NoSuchElementException e) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
+        } catch (EntityExistsException e) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, e.getMessage());
+        } catch (StorageException e) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
+        }
+    }
+
+
+    @DeleteMapping("/commands-for-actions/{id}/file")
+    public ResponseEntity<?> deleteFile(@PathVariable @Positive @NotNull Long id) {
+        try {
+            commandForActionService.detachFile(id);
+            return ResponseEntity.ok().build();
+        } catch (NoSuchElementException e) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
+        } catch (EntityNotFoundException e) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, e.getMessage());
         }
     }
 
@@ -77,7 +106,7 @@ public class DeviceController {
     }
 
     @GetMapping("/devices/{id}")
-    public ResponseEntity<DeviceDTO.Response.Device> getDeviceById(@PathVariable @Positive @NotNull String id) {
+    public ResponseEntity<DeviceDTO.Response.Device> getDeviceById(@PathVariable @NotNull String id) {
         try {
             var device = deviceService.getDeviceById(id);
             return ResponseEntity.ok(device);
@@ -102,7 +131,7 @@ public class DeviceController {
 
     @PutMapping("/devices/{id}")
     public ResponseEntity<?> updateDevice(@Valid @RequestBody(required = false) DeviceDTO.Request.UpdateDevice updateDevice,
-                                          @PathVariable @Positive @NotNull String id, @RequestParam("status") Optional<Boolean> status) {
+                                          @PathVariable @NotNull String id, @RequestParam("status") Optional<Boolean> status) {
         try {
             if (updateDevice != null) {
                 deviceService.updateDevice(id, updateDevice.getName());
