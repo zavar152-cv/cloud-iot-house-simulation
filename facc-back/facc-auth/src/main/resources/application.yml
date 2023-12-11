@@ -29,7 +29,7 @@ spring:
   mvc:
     log-resolved-exception: true
 token:
-  expire: 24
+  expire: 1440
   signing:
     key: 413F4428472B4B6250655368566D5970337336763979244226452948404D6351
 admin:
