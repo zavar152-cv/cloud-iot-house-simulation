@@ -73,6 +73,7 @@ public class SchedulerServiceImpl implements SchedulerService {
                     enableSimulation();
                 } else {
                     setSchedulerForSimulation(stateEntity.getStartCronExpression(), stateEntity.getEndCronExpression());
+                    enableSimulation();
                 }
             }
         }
@@ -106,6 +107,7 @@ public class SchedulerServiceImpl implements SchedulerService {
                         .arguments(arguments)
                         .jobGroup(group).build();
                 TimetableEntryEntity savedEntry = timetableEntryRepository.save(entryEntity);
+                log.info("job {} with id {} saved", savedEntry.getName(), savedEntry.getId());
                 jobDetail = scheduleCreator.createJobForDevice(jobClass, false, context, name, group.name(), deviceEntity.getId(), savedEntry.getId());
 
                 jobDetail.getJobDataMap().put("arguments", arguments);
@@ -113,10 +115,9 @@ public class SchedulerServiceImpl implements SchedulerService {
 
                 Trigger trigger = scheduleCreator.createCronTrigger(name, new Date(),
                         cronExpression, SimpleTrigger.MISFIRE_INSTRUCTION_FIRE_NOW);
-                scheduler.scheduleJob(jobDetail, trigger);
-                log.info("job {} with id {} scheduled", savedEntry.getName(), savedEntry.getId());
-                if (!simulationEnabled) {
-                    pauseJob(savedEntry.getId());
+                if (simulationEnabled) {
+                    scheduler.scheduleJob(jobDetail, trigger);
+                    log.info("job {} with id {} scheduled", savedEntry.getName(), savedEntry.getId());
                 }
             } else {
                 log.error("scheduleNewJobRequest.jobAlreadyExist");
@@ -125,6 +126,16 @@ public class SchedulerServiceImpl implements SchedulerService {
         } catch (SchedulerException e) {
             log.error(e.getMessage(), e);
             throw e;
+        }
+    }
+
+    @Override
+    public void createTimetableEntryForGroup(String name, JobGroup group, String cronExpression, String description, Long actionId, List<String> arguments) throws SchedulerException, IllegalArgumentException, EntityNotFoundException {
+        List<DeviceEntity> allByJobGroup = deviceRepository.findAllByJobGroup(group);
+        int i = 0;
+        for (DeviceEntity deviceEntity : allByJobGroup) {
+            createTimetableEntry(name + i, group, cronExpression, description, deviceEntity.getId(), actionId, arguments);
+            i++;
         }
     }
 
@@ -254,7 +265,6 @@ public class SchedulerServiceImpl implements SchedulerService {
 
     @Override
     public void enableSimulation() {
-        log.info(String.valueOf(simulationEnabled));
         if (simulationEnabled)
             return;
         statusRepository.findById(1L).ifPresent(statusEntity -> {
@@ -292,7 +302,6 @@ public class SchedulerServiceImpl implements SchedulerService {
 
     @Override
     public void disableSimulation() {
-        log.info(String.valueOf(simulationEnabled));
         if (!simulationEnabled)
             return;
         statusRepository.findById(2L).ifPresent(statusEntity -> {

@@ -24,6 +24,11 @@ public enum DeviceDTO {
         String getType();
     }
 
+    private interface Group {
+        @NotBlank
+        String getGroup();
+    }
+
     private interface TypeId {
         @NotNull
         @Positive
@@ -39,9 +44,10 @@ public enum DeviceDTO {
         ;
 
         @Value
-        public static class CreateNewDevice implements Id, Name, TypeId {
+        public static class CreateNewDevice implements Id, Name, Group, TypeId {
             String id;
             String name;
+            String group;
             Long typeId;
         }
 

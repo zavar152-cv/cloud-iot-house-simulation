@@ -7,6 +7,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.itmo.zavar.dto.DeviceDTO;
+import ru.itmo.zavar.dto.GroupOnEntity;
 import ru.itmo.zavar.dto.TypeDTO;
 import ru.itmo.zavar.entity.DeviceEntity;
 import ru.itmo.zavar.entity.DeviceOnEntity;
@@ -14,12 +15,14 @@ import ru.itmo.zavar.entity.TypeEntity;
 import ru.itmo.zavar.model.JobGroup;
 import ru.itmo.zavar.repo.DeviceOnRepository;
 import ru.itmo.zavar.repo.DeviceRepository;
+import ru.itmo.zavar.repo.GroupOnRepository;
 import ru.itmo.zavar.repo.TypeRepository;
 import ru.itmo.zavar.service.DeviceService;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.Optional;
 import java.util.stream.Stream;
 
 @Service
@@ -30,9 +33,10 @@ public class DeviceServiceImpl implements DeviceService {
     private final DeviceRepository deviceRepository;
     private final TypeRepository typeRepository;
     private final DeviceOnRepository deviceOnRepository;
+    private final GroupOnRepository groupOnRepository;
 
     @Override
-    public void createDevice(String id, String name, Long typeId) throws EntityNotFoundException, EntityExistsException {
+    public void createDevice(String id, String name, JobGroup group, Long typeId) throws EntityNotFoundException, EntityExistsException {
         deviceRepository.findById(id).ifPresent(deviceEntity -> {
             throw new EntityExistsException("Device with this id exists");
         });
@@ -42,6 +46,7 @@ public class DeviceServiceImpl implements DeviceService {
                 .id(id)
                 .type(typeEntity)
                 .status(false)
+                .jobGroup(group)
                 .name(name).build();
         deviceRepository.save(deviceEntity);
     }
@@ -104,5 +109,19 @@ public class DeviceServiceImpl implements DeviceService {
     @Override
     public List<String> getAllGroups() {
         return Stream.of(JobGroup.values()).map(Enum::name).toList();
+    }
+
+    @Override
+    public void setGroupStatus(JobGroup jobGroup, boolean status) {
+        Optional<GroupOnEntity> optionalGroupOn = groupOnRepository.findByJobGroup(jobGroup);
+        if(status) {
+            if(optionalGroupOn.isEmpty()) {
+                groupOnRepository.save(GroupOnEntity.builder().jobGroup(jobGroup).build());
+            }
+        } else {
+            optionalGroupOn.ifPresent(groupOnEntity -> groupOnRepository.deleteById(groupOnEntity.getId()));
+        }
+        List<DeviceEntity> all = deviceRepository.findAllByJobGroup(jobGroup);
+        all.forEach(deviceEntity -> changeDeviceStatus(deviceEntity.getId(), status));
     }
 }

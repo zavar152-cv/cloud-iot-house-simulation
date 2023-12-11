@@ -1,12 +1,12 @@
-package ru.itmo.zavar.entity;
+package ru.itmo.zavar.dto;
 
 import jakarta.persistence.*;
-import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import ru.itmo.zavar.entity.DeviceEntity;
 import ru.itmo.zavar.model.JobGroup;
 
 @Data
@@ -14,23 +14,13 @@ import ru.itmo.zavar.model.JobGroup;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
-@Table(name = "devices")
-public class DeviceEntity {
+@Table(name = "groups_on")
+public class GroupOnEntity {
     @Id
-    private String id;
-
-    @NotBlank
-    @Column(unique = true)
-    private String name;
-
-    @ManyToOne(fetch = FetchType.EAGER)
-    @NotNull
-    private TypeEntity type;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
     @Enumerated(EnumType.STRING)
     @NotNull
     private JobGroup jobGroup;
-
-    @NotNull
-    private Boolean status;
 }

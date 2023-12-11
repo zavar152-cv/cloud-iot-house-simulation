@@ -104,6 +104,23 @@ public class SchedulerController {
         return ResponseEntity.status(HttpStatus.CREATED).build();
     }
 
+    @PostMapping("/timetable-entries/group")
+    public ResponseEntity<?> createTimetableEntryForGroup(@Valid @RequestBody TimetableEntryDTO.Request.CreateNewEntryForGroup entry) {
+        try {
+            schedulerService.createTimetableEntryForGroup(entry.getName(), entry.getGroup(), entry.getCronExpression(),
+                    entry.getDescription(), entry.getActionId(), entry.getArguments());
+        } catch (SchedulerException e) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
+        } catch (IllegalArgumentException e) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, e.getMessage());
+        } catch (EntityNotFoundException e) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
+        } catch (DataIntegrityViolationException e) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Check job name");
+        }
+        return ResponseEntity.status(HttpStatus.CREATED).build();
+    }
+
     @PutMapping("/timetable-entries/{id}")
     public ResponseEntity<?> updateTimetableEntry(@Valid @RequestBody TimetableEntryDTO.Request.UpdateEntry entry,
                                                   @PathVariable @Positive @NotNull Long id) {
