@@ -4,12 +4,13 @@ import jakarta.persistence.EntityExistsException;
 import jakarta.persistence.EntityNotFoundException;
 import ru.itmo.zavar.dto.DeviceDTO;
 import ru.itmo.zavar.dto.TypeDTO;
+import ru.itmo.zavar.model.JobGroup;
 
 import java.util.List;
 import java.util.NoSuchElementException;
 
 public interface DeviceService {
-    void createDevice(String id, String name, Long typeId) throws EntityNotFoundException, EntityExistsException;
+    void createDevice(String id, String name, JobGroup group, Long typeId) throws EntityNotFoundException, EntityExistsException;
 
     void updateDevice(String id, String name) throws NoSuchElementException;
 
@@ -26,4 +27,6 @@ public interface DeviceService {
     TypeDTO.Response.Type getTypeById(Long id) throws NoSuchElementException;
 
     List<String> getAllGroups();
+
+    void setGroupStatus(JobGroup jobGroup, boolean status);
 }

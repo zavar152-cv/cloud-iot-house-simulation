@@ -12,6 +12,8 @@ import java.util.NoSuchElementException;
 public interface SchedulerService {
     void createTimetableEntry(String name, JobGroup group, String cronExpression, String description, String deviceId, Long actionId, List<String> arguments) throws SchedulerException, IllegalArgumentException, EntityNotFoundException;
 
+    void createTimetableEntryForGroup(String name, JobGroup group, String cronExpression, String description, Long actionId, List<String> arguments) throws SchedulerException, IllegalArgumentException, EntityNotFoundException;
+
     void updateTimetableEntry(Long id, String name, String cronExpression, String description) throws NoSuchElementException, SchedulerException;
 
     boolean deleteTimetableEntry(Long id) throws NoSuchElementException, SchedulerException;

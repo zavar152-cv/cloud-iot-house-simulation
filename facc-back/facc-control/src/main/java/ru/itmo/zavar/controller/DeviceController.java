@@ -17,6 +17,7 @@ import ru.itmo.zavar.dto.ActionDTO;
 import ru.itmo.zavar.dto.CommandForActionDTO;
 import ru.itmo.zavar.dto.DeviceDTO;
 import ru.itmo.zavar.exception.StorageException;
+import ru.itmo.zavar.model.JobGroup;
 import ru.itmo.zavar.service.ActionService;
 import ru.itmo.zavar.service.CommandForActionService;
 import ru.itmo.zavar.service.DeviceService;
@@ -38,6 +39,17 @@ public class DeviceController {
     public ResponseEntity<List<String>> getAllGroups() {
         var all = deviceService.getAllGroups();
         return ResponseEntity.ok(all);
+    }
+
+    @PutMapping("/groups/{group}")
+    public ResponseEntity<?> setGroupStatus(@PathVariable @NotNull String group, @RequestParam("status") @NotNull Boolean status) {
+        try {
+            JobGroup jobGroup = JobGroup.valueOf(group);
+            deviceService.setGroupStatus(jobGroup, status);
+            return ResponseEntity.ok().build();
+        } catch (IllegalArgumentException e) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
+        }
     }
 
     @GetMapping("/actions")
@@ -118,13 +130,15 @@ public class DeviceController {
     @PostMapping("/devices")
     public ResponseEntity<?> createDevice(@Valid @RequestBody DeviceDTO.Request.CreateNewDevice createNewDevice) {
         try {
-            deviceService.createDevice(createNewDevice.getId(), createNewDevice.getName(), createNewDevice.getTypeId());
+            deviceService.createDevice(createNewDevice.getId(), createNewDevice.getName(), JobGroup.valueOf(createNewDevice.getGroup()), createNewDevice.getTypeId());
         } catch (EntityNotFoundException e) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
         } catch (EntityExistsException e) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, e.getMessage());
         } catch (DataIntegrityViolationException e) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Device with this name exists");
+        } catch (IllegalArgumentException e) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Group not found");
         }
         return ResponseEntity.status(HttpStatus.CREATED).build();
     }

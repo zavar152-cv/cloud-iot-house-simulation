@@ -84,6 +84,16 @@ public enum TimetableEntryDTO {
         }
 
         @Value
+        public static class CreateNewEntryForGroup implements Name, Group, CronExpression, Description, ActionId, Arguments {
+            String name;
+            JobGroup group;
+            String cronExpression;
+            String description;
+            Long actionId;
+            List<String> arguments;
+        }
+
+        @Value
         public static class UpdateEntry implements Name, CronExpression, Description, ActionId, Arguments {
             String name;
             String cronExpression;

@@ -12,6 +12,7 @@ import ru.itmo.zavar.dto.ActionDTO;
 import ru.itmo.zavar.entity.TimetableEntryEntity;
 import ru.itmo.zavar.model.JobStatus;
 import ru.itmo.zavar.repo.DeviceOnRepository;
+import ru.itmo.zavar.repo.GroupOnRepository;
 import ru.itmo.zavar.repo.TimetableEntryRepository;
 import ru.itmo.zavar.service.ActionService;
 import ru.itmo.zavar.service.CloudLoggingService;
@@ -32,15 +33,20 @@ public class MusicJob extends QuartzJobBean {
     private CloudLoggingService cloudLoggingService;
     @Autowired
     private ActionService actionService;
+    @Autowired
+    private GroupOnRepository groupOnRepository;
 
     @Override
     protected void executeInternal(@NonNull JobExecutionContext context) throws JobExecutionException {
         Long id = (Long) context.getMergedJobDataMap().get("id");
         String deviceId = (String) context.getMergedJobDataMap().get("deviceId");
+        TimetableEntryEntity timetableEntryEntity = timetableEntryRepository.findById(id).orElseThrow();
+        if (groupOnRepository.findByJobGroup(timetableEntryEntity.getJobGroup()).isEmpty()) {
+            return;
+        }
         if (deviceOnRepository.findByDevice_Id(deviceId).isEmpty()) {
             return;
         }
-        TimetableEntryEntity timetableEntryEntity = timetableEntryRepository.findById(id).orElseThrow();
         timetableEntryEntity.setJobStatus(JobStatus.EXECUTING);
         timetableEntryRepository.save(timetableEntryEntity);
         log.info("Set {} status to job with id {}", JobStatus.EXECUTING, id);

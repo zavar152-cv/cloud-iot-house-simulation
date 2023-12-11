@@ -46,15 +46,20 @@ public class SpeakersJob extends QuartzJobBean {
     private CommandForActionRepository commandForActionRepository;
     @Autowired
     private SpeechKitService speechKitService;
+    @Autowired
+    private GroupOnRepository groupOnRepository;
 
     @Override
     protected void executeInternal(@NonNull JobExecutionContext context) throws JobExecutionException {
         Long id = (Long) context.getMergedJobDataMap().get("id");
         String deviceId = (String) context.getMergedJobDataMap().get("deviceId");
+        TimetableEntryEntity timetableEntryEntity = timetableEntryRepository.findById(id).orElseThrow();
+        if (groupOnRepository.findByJobGroup(timetableEntryEntity.getJobGroup()).isEmpty()) {
+            return;
+        }
         if (deviceOnRepository.findByDevice_Id(deviceId).isEmpty()) {
             return;
         }
-        TimetableEntryEntity timetableEntryEntity = timetableEntryRepository.findById(id).orElseThrow();
         timetableEntryEntity.setJobStatus(JobStatus.EXECUTING);
         timetableEntryRepository.save(timetableEntryEntity);
         log.info("Set {} status to job with id {}", JobStatus.EXECUTING, id);
