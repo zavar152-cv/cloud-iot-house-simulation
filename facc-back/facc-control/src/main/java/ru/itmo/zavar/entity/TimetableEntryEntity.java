@@ -30,6 +30,7 @@ public class TimetableEntryEntity {
     @NotNull
     private ActionEntity action;
     @NotBlank
+    @Column(unique = true)
     private String name;
     @Enumerated(EnumType.STRING)
     @NotNull

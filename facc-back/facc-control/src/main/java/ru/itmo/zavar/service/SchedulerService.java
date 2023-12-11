@@ -2,6 +2,7 @@ package ru.itmo.zavar.service;
 
 import jakarta.persistence.EntityNotFoundException;
 import org.quartz.SchedulerException;
+import ru.itmo.zavar.dto.SimulationDTO;
 import ru.itmo.zavar.dto.TimetableEntryDTO;
 import ru.itmo.zavar.model.JobGroup;
 
@@ -28,4 +29,10 @@ public interface SchedulerService {
     void enableSimulation();
 
     void disableSimulation();
+
+    void setSchedulerForSimulation(String startCron, String endCron) throws SchedulerException;
+
+    void removeSchedulerForSimulation() throws SchedulerException;
+
+    SimulationDTO.Response.GetSchedule getSchedulerForSimulation() throws NoSuchElementException;
 }

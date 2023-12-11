@@ -20,4 +20,8 @@ public class StateEntity {
     @NotNull
     @OneToOne(fetch = FetchType.EAGER)
     private StatusEntity simulationStatus;
+
+    private String startCronExpression;
+
+    private String endCronExpression;
 }

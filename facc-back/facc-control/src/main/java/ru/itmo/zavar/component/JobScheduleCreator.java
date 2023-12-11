@@ -19,8 +19,8 @@ import java.util.Date;
 @Component
 public class JobScheduleCreator {
 
-    public JobDetail createJob(Class<? extends QuartzJobBean> jobClass, boolean isDurable,
-                               ApplicationContext context, String jobName, String jobGroup, String deviceId, Long id) {
+    public JobDetail createJobForDevice(Class<? extends QuartzJobBean> jobClass, boolean isDurable,
+                                        ApplicationContext context, String jobName, String jobGroup, String deviceId, Long id) {
         JobDetailFactoryBean factoryBean = new JobDetailFactoryBean();
         factoryBean.setJobClass(jobClass);
         factoryBean.setDurability(isDurable);
@@ -36,6 +36,27 @@ public class JobScheduleCreator {
         jobDataMap.put("class", jobClass.getName());
         jobDataMap.put("deviceId", deviceId);
         jobDataMap.put("id", id);
+        factoryBean.setJobDataMap(jobDataMap);
+        factoryBean.afterPropertiesSet();
+        return factoryBean.getObject();
+    }
+
+    public JobDetail createJobForSimulation(Class<? extends QuartzJobBean> jobClass, boolean isDurable,
+                                        ApplicationContext context, String jobName, String jobGroup, Boolean enable) {
+        JobDetailFactoryBean factoryBean = new JobDetailFactoryBean();
+        factoryBean.setJobClass(jobClass);
+        factoryBean.setDurability(isDurable);
+        factoryBean.setApplicationContext(context);
+        factoryBean.setName(jobName);
+        factoryBean.setGroup(jobGroup);
+
+        // set job data map
+        JobDataMap jobDataMap = new JobDataMap();
+        jobDataMap.put(jobName + jobGroup, jobClass.getName());
+        jobDataMap.put("group", jobGroup);
+        jobDataMap.put("name", jobName);
+        jobDataMap.put("class", jobClass.getName());
+        jobDataMap.put("enable", enable);
         factoryBean.setJobDataMap(jobDataMap);
         factoryBean.afterPropertiesSet();
         return factoryBean.getObject();
