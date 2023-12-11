@@ -8,10 +8,12 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.quartz.SchedulerException;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
+import ru.itmo.zavar.dto.SimulationDTO;
 import ru.itmo.zavar.dto.TimetableEntryDTO;
 import ru.itmo.zavar.service.SchedulerService;
 
@@ -29,7 +31,7 @@ public class SchedulerController {
     @Value("${status.disabled}")
     private String disabledStatus;
 
-    @PutMapping("")
+    @PutMapping("/simulation")
     public ResponseEntity<?> changeState(@RequestParam("state") String state) {
         if (state.equals(enabledStatus)) {
             schedulerService.enableSimulation();
@@ -39,6 +41,33 @@ public class SchedulerController {
             return ResponseEntity.ok().build();
         } else {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+        }
+    }
+
+    @PostMapping("/simulation")
+    public ResponseEntity<?> updateScheduleForSimulation(@Valid @RequestBody SimulationDTO.Request.SetSchedule setSchedule) {
+        try {
+            if (setSchedule.getStartCronExpression() == null && setSchedule.getEndCronExpression() == null) {
+                schedulerService.removeSchedulerForSimulation();
+                return ResponseEntity.ok().build();
+            } else if (setSchedule.getStartCronExpression() != null && setSchedule.getEndCronExpression() != null) {
+                schedulerService.setSchedulerForSimulation(setSchedule.getStartCronExpression(), setSchedule.getEndCronExpression());
+                return ResponseEntity.ok().build();
+            } else {
+                throw new ResponseStatusException(HttpStatus.CONFLICT, "Both expressions should be null or not null at the same time");
+            }
+        } catch (SchedulerException e) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
+        }
+    }
+
+    @GetMapping("/simulation")
+    public ResponseEntity<SimulationDTO.Response.GetSchedule> getSimulationScheduleInfo() {
+        try {
+            SimulationDTO.Response.GetSchedule schedulerForSimulation = schedulerService.getSchedulerForSimulation();
+            return ResponseEntity.ok(schedulerForSimulation);
+        } catch (NoSuchElementException e) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
         }
     }
 
@@ -69,6 +98,8 @@ public class SchedulerController {
             throw new ResponseStatusException(HttpStatus.CONFLICT, e.getMessage());
         } catch (EntityNotFoundException e) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
+        } catch (DataIntegrityViolationException e) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Check job name");
         }
         return ResponseEntity.status(HttpStatus.CREATED).build();
     }
@@ -82,6 +113,8 @@ public class SchedulerController {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
         } catch (NoSuchElementException e) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
+        } catch (DataIntegrityViolationException e) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Check job name");
         }
         return ResponseEntity.ok().build();
     }
