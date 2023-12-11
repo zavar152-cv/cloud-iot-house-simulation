@@ -125,6 +125,11 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     }
 
     @Override
+    public boolean isTokenValid(String token) {
+        return jwtService.isTokenValid(token);
+    }
+
+    @Override
     public UserDTO.Response.UserDetails getUserDetailsByToken(String token) {
         String username = jwtService.extractUserName(token);
         UserEntity userDetails = (UserEntity) userService.userDetailsService()

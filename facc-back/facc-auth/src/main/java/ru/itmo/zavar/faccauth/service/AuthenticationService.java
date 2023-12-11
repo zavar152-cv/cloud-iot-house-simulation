@@ -16,5 +16,7 @@ public interface AuthenticationService {
 
     boolean isTokenValid(String username, String token) throws UsernameNotFoundException;
 
+    boolean isTokenValid(String token);
+
     UserDTO.Response.UserDetails getUserDetailsByToken(String token);
 }
