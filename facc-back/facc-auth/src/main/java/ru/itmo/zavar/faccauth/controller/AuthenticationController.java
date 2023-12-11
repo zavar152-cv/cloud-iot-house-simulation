@@ -9,6 +9,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -135,16 +136,17 @@ public class AuthenticationController {
             @ApiResponse(responseCode = "404", description = "User not found",
                     content = {@Content(mediaType = "application/json",
                             schema = @Schema(implementation = SpringErrorMessage.class))})})
-    @GetMapping("/validateJwtToken")
-    public ResponseEntity<UserDTO.Response.UserDetails> validateJwtToken(@Valid @RequestBody JwtDTO.Request.JwtValidation request) {
+    @GetMapping("/auth")
+    public ResponseEntity<UserDTO.Response.UserDetails> validateJwtToken(@RequestHeader("Authorization") @Valid @NotBlank String authorizationHeader) {
+        String jwt = authorizationHeader.substring(7);
         try {
-            boolean tokenValid = authenticationService.isTokenValid(request.getUsername(), request.getJwtToken());
+            boolean tokenValid = authenticationService.isTokenValid(jwt);
             if (!tokenValid)
                 throw new JwtException("JWT token is not valid");
-            UserDTO.Response.UserDetails userDetailsByToken = authenticationService.getUserDetailsByToken(request.getJwtToken());
-            log.info("User {} has valid token {} and got details", request.getUsername(), request.getJwtToken());
+            UserDTO.Response.UserDetails userDetailsByToken = authenticationService.getUserDetailsByToken(jwt);
+            log.info("User has valid token {} and got details", jwt);
             cloudLoggingService.log(LogEntryOuterClass.LogLevel.Level.INFO, "AuthenticationService",
-                    "User {} has valid token {} and got details", request.getUsername(), request.getJwtToken());
+                    "User has valid token {} and got details", jwt);
             return ResponseEntity.ok(userDetailsByToken);
         } catch (UsernameNotFoundException exception) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, exception.getMessage());
