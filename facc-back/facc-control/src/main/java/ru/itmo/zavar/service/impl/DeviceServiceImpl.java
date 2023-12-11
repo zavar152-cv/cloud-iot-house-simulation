@@ -7,7 +7,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.itmo.zavar.dto.DeviceDTO;
-import ru.itmo.zavar.dto.GroupOnEntity;
+import ru.itmo.zavar.entity.GroupOnEntity;
 import ru.itmo.zavar.dto.TypeDTO;
 import ru.itmo.zavar.entity.DeviceEntity;
 import ru.itmo.zavar.entity.DeviceOnEntity;

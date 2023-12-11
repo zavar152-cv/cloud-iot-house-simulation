@@ -1,4 +1,4 @@
-package ru.itmo.zavar.dto;
+package ru.itmo.zavar.entity;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
