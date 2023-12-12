@@ -7,6 +7,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.itmo.zavar.dto.DeviceDTO;
+import ru.itmo.zavar.dto.GroupDTO;
 import ru.itmo.zavar.entity.GroupOnEntity;
 import ru.itmo.zavar.dto.TypeDTO;
 import ru.itmo.zavar.entity.DeviceEntity;
@@ -107,8 +108,13 @@ public class DeviceServiceImpl implements DeviceService {
     }
 
     @Override
-    public List<String> getAllGroups() {
-        return Stream.of(JobGroup.values()).map(Enum::name).toList();
+    public List<GroupDTO.Response.GetGroupInfo> getAllGroups() {
+        List<GroupDTO.Response.GetGroupInfo> all = new ArrayList<>();
+        for (JobGroup jobGroup : JobGroup.values()) {
+            boolean status = groupOnRepository.findByJobGroup(jobGroup).isPresent();
+            all.add(new GroupDTO.Response.GetGroupInfo(jobGroup.name(), status));
+        }
+       return all;
     }
 
     @Override

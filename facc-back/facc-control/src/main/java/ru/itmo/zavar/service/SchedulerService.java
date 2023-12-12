@@ -36,5 +36,5 @@ public interface SchedulerService {
 
     void removeSchedulerForSimulation() throws SchedulerException;
 
-    SimulationDTO.Response.GetSchedule getSchedulerForSimulation() throws NoSuchElementException;
+    SimulationDTO.Response.GetSimulationInfo getSimulationInfo() throws NoSuchElementException;
 }

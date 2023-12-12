@@ -3,6 +3,7 @@ package ru.itmo.zavar.service;
 import jakarta.persistence.EntityExistsException;
 import jakarta.persistence.EntityNotFoundException;
 import ru.itmo.zavar.dto.DeviceDTO;
+import ru.itmo.zavar.dto.GroupDTO;
 import ru.itmo.zavar.dto.TypeDTO;
 import ru.itmo.zavar.model.JobGroup;
 
@@ -26,7 +27,7 @@ public interface DeviceService {
 
     TypeDTO.Response.Type getTypeById(Long id) throws NoSuchElementException;
 
-    List<String> getAllGroups();
+    List<GroupDTO.Response.GetGroupInfo> getAllGroups();
 
     void setGroupStatus(JobGroup jobGroup, boolean status);
 }
