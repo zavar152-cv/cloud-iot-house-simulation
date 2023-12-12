@@ -159,4 +159,9 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         return new UserDTO.Response.UserDetails(userDetails.getId(), userDetails.getUsername(),
                 userDetails.getRoles().stream().map(RoleEntity::getName).collect(Collectors.toUnmodifiableSet()));
     }
+
+    @Override
+    public void deleteUser(Long id) throws NoSuchElementException {
+        userService.deleteUser(id);
+    }
 }

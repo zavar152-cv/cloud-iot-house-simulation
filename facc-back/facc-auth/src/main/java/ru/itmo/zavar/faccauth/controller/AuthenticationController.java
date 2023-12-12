@@ -64,6 +64,16 @@ public class AuthenticationController {
         return ResponseEntity.ok(authenticationService.getAllUserDetails());
     }
 
+    @DeleteMapping("/users/{id}")
+    public ResponseEntity<?> deleteUser(@PathVariable @NotNull @Positive Long id) {
+        try {
+            authenticationService.deleteUser(id);
+            return ResponseEntity.ok().build();
+        } catch (NoSuchElementException e) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
+        }
+    }
+
     @Operation(summary = "Updates user's name")
     @PutMapping("/users/{id}/name")
     public ResponseEntity<?> updateUserName(@PathVariable @NotNull @Positive Long id, @Valid @RequestBody UserDTO.Request.ChangeName changeName) {

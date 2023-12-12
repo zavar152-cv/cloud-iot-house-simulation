@@ -28,4 +28,6 @@ public interface AuthenticationService {
     boolean isTokenValid(String token);
 
     UserDTO.Response.UserDetails getUserDetailsByToken(String token);
+
+    void deleteUser(Long id) throws NoSuchElementException;
 }
