@@ -79,7 +79,7 @@ public class AuthenticationController {
     @PutMapping("/users/{id}/password")
     public ResponseEntity<?> updateUserPassword(@PathVariable @NotNull @Positive Long id, @Valid @RequestBody UserDTO.Request.ChangePassword changePassword) {
         try {
-            authenticationService.updateUserPassword(id, changePassword.getOldPassword(), changePassword.getPassword());
+            authenticationService.updateUserPassword(id, changePassword.getPassword());
             return ResponseEntity.ok().build();
         } catch (NoSuchElementException e) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
