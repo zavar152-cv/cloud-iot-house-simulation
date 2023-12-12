@@ -10,6 +10,7 @@ import ru.itmo.zavar.faccauth.service.UserService;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.Optional;
 
 @Service
@@ -26,6 +27,12 @@ public class UserServiceImpl implements UserService {
     @Override
     public UserEntity saveUser(UserEntity userEntity) {
         return userRepository.save(userEntity);
+    }
+
+    @Override
+    public void deleteUser(Long id) throws NoSuchElementException {
+        userRepository.findById(id).orElseThrow();
+        userRepository.deleteById(id);
     }
 
     @Override
