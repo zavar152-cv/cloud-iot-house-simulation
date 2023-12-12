@@ -103,8 +103,9 @@ public final class MqttSession implements MqttCallback {
 
     @Override
     public void messageArrived(String topic, MqttMessage message) throws Exception {
-        log.info("Message arrived for " + clientId + "> " + topic + ": " + message);
-        onDoneHandler.run();
+        log.info("Message arrived for " + clientId + "> " + topic + ": " + message.toString().replace("\n", ""));
+        if(onDoneHandler != null)
+            onDoneHandler.run();
     }
 
     @Override
