@@ -36,6 +36,9 @@ status:
 yandex:
   auth-key-file: /authorized_key.json
   log-group-id: e232s1431gbklopopjth
+  mqtt:
+    broker-url: ssl://mqtt.cloud.yandex.net:8883
+    registry-id: arer55oi4m3l1tv2r7ig
   speech-kit:
     api-key: AQVN0d46lvCEhtvxu40fPEQmEO6kfJ2MSWYaaC0b
     tts:

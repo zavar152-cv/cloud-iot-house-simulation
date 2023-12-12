@@ -11,7 +11,7 @@ INSERT INTO actions (id, action, action_group, arguments_count) VALUES
                                                                     (3, 'play_voice_command', 'SPEAKERS_GROUP', 1),
                                                                     (4, 'curtains_up', 'CURTAINS_GROUP', 0),
                                                                     (5, 'curtains_down', 'CURTAINS_GROUP', 0),
-                                                                    (6, 'music_play', 'MUSIC_GROUP', 0),
+                                                                    (6, 'music_play', 'MUSIC_GROUP', 1),
                                                                     (7, 'music_stop', 'MUSIC_GROUP', 0),
                                                                     (8, 'music_volume', 'MUSIC_GROUP', 1)
                                                                 ON CONFLICT DO NOTHING;
@@ -26,8 +26,8 @@ INSERT INTO commands_for_actions (id, command, action_id, file_id) VALUES
                                                                 ON CONFLICT DO NOTHING;
 
 INSERT INTO devices (id, name, status, type_id, job_group) VALUES
-                                                    ('fdgpiub234bx', 'LightDevice1', false, 1, 'LIGHT_GROUP'),
-                                                    ('df14sdf124as', 'CurtainsDevice1', false, 2, 'CURTAINS_GROUP'),
-                                                    ('vnbojfdg2425', 'SpeakerDevice1', false, 3, 'SPEAKERS_GROUP'),
-                                                    ('plpyiyuob242', 'MusicDevice1', false, 4, 'MUSIC_GROUP')
+                                                    ('areom5ojjdknaaofng59', 'LightDevice1', false, 1, 'LIGHT_GROUP'),
+                                                    ('arebhu14q66rrsqdqdmh', 'CurtainsDevice1', false, 2, 'CURTAINS_GROUP'),
+                                                    ('aretmh5qiqm73o0tgmlu', 'SpeakerDevice1', false, 3, 'SPEAKERS_GROUP'),
+                                                    ('areuiu27jj8bknc4gcq4', 'MusicDevice1', false, 4, 'MUSIC_GROUP')
                                                                 ON CONFLICT DO NOTHING;

@@ -5,12 +5,14 @@ import org.quartz.DisallowConcurrentExecution;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.lang.NonNull;
 import org.springframework.scheduling.quartz.QuartzJobBean;
 import org.springframework.stereotype.Component;
 import ru.itmo.zavar.dto.ActionDTO;
 import ru.itmo.zavar.entity.TimetableEntryEntity;
 import ru.itmo.zavar.model.JobStatus;
+import ru.itmo.zavar.mqtt.MqttSession;
 import ru.itmo.zavar.repo.DeviceOnRepository;
 import ru.itmo.zavar.repo.GroupOnRepository;
 import ru.itmo.zavar.repo.TimetableEntryRepository;
@@ -36,6 +38,12 @@ public class LightJob extends QuartzJobBean {
     private ActionService actionService;
     @Autowired
     private GroupOnRepository groupOnRepository;
+
+    @Value("${yandex.mqtt.broker-url}")
+    private String mqttBrokerUrl;
+
+    @Value("${yandex.mqtt.registry-id}")
+    private String mqttRegistryId;
 
     @Override
     protected void executeInternal(@NonNull JobExecutionContext context) throws JobExecutionException {
@@ -69,6 +77,7 @@ public class LightJob extends QuartzJobBean {
             log.info("Executing job with id {} with arguments {} and action {}", id, String.join(", ", arguments), action);
             cloudLoggingService.log(LogEntryOuterClass.LogLevel.Level.INFO, getClass().getName(), "Executing job with arguments {} and action {}", id, String.join(", ", arguments), action);
         }
+        sendToDevice(deviceId, action, arguments);
 
         Optional<TimetableEntryEntity> optionalTimetableEntry = timetableEntryRepository.findById(id);
         if (optionalTimetableEntry.isPresent()) {
@@ -85,6 +94,18 @@ public class LightJob extends QuartzJobBean {
         } else {
             log.warn("Job with id {} was deleted before ending", id);
             cloudLoggingService.log(LogEntryOuterClass.LogLevel.Level.WARN, getClass().getName(), "Job with id {} was deleted before ending", id);
+        }
+    }
+
+    private void sendToDevice(String deviceId, String action, List<String> arguments) {
+        log.info("Sending to device...");
+        try {
+            MqttSession mqttSession = new MqttSession(mqttBrokerUrl, getClass().getName(), deviceId);
+            mqttSession.start();
+            mqttSession.publish("$devices/" + deviceId + "/events", action + " " + String.join(",", arguments));
+            mqttSession.stop();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
         }
     }
 }

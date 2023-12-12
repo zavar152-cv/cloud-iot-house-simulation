@@ -6,6 +6,7 @@ import org.quartz.DisallowConcurrentExecution;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.lang.NonNull;
 import org.springframework.scheduling.quartz.QuartzJobBean;
 import org.springframework.stereotype.Component;
@@ -15,6 +16,7 @@ import ru.itmo.zavar.entity.ActionEntity;
 import ru.itmo.zavar.entity.CommandForActionEntity;
 import ru.itmo.zavar.entity.TimetableEntryEntity;
 import ru.itmo.zavar.model.JobStatus;
+import ru.itmo.zavar.mqtt.MqttSession;
 import ru.itmo.zavar.repo.*;
 import ru.itmo.zavar.service.ActionService;
 import ru.itmo.zavar.service.CloudLoggingService;
@@ -48,6 +50,9 @@ public class SpeakersJob extends QuartzJobBean {
     private SpeechKitService speechKitService;
     @Autowired
     private GroupOnRepository groupOnRepository;
+
+    @Value("${yandex.mqtt.broker-url}")
+    private String mqttBrokerUrl;
 
     @Override
     protected void executeInternal(@NonNull JobExecutionContext context) throws JobExecutionException {
@@ -124,5 +129,13 @@ public class SpeakersJob extends QuartzJobBean {
 
     private void sendToDevice(String deviceId, String action, List<String> arguments, byte[] content) {
         log.info("Sending to device...");
+        try {
+            MqttSession mqttSession = new MqttSession(mqttBrokerUrl, getClass().getName(), deviceId);
+            mqttSession.start();
+            mqttSession.publish("$devices/" + deviceId + "/events", action + " " + String.join(",", arguments) + " " + new String(content));
+            mqttSession.stop();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 }
