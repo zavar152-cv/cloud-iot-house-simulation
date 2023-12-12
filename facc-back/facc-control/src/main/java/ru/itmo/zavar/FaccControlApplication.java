@@ -14,6 +14,7 @@ import yandex.cloud.sdk.ServiceFactory;
 import yandex.cloud.sdk.auth.Auth;
 import yandex.cloud.sdk.auth.provider.CredentialProvider;
 
+import java.io.File;
 import java.net.URISyntaxException;
 import java.nio.file.Paths;
 import java.util.Objects;
