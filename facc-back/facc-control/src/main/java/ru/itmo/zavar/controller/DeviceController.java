@@ -16,6 +16,7 @@ import org.springframework.web.server.ResponseStatusException;
 import ru.itmo.zavar.dto.ActionDTO;
 import ru.itmo.zavar.dto.CommandForActionDTO;
 import ru.itmo.zavar.dto.DeviceDTO;
+import ru.itmo.zavar.dto.GroupDTO;
 import ru.itmo.zavar.exception.StorageException;
 import ru.itmo.zavar.model.JobGroup;
 import ru.itmo.zavar.service.ActionService;
@@ -36,7 +37,7 @@ public class DeviceController {
     private final CommandForActionService commandForActionService;
 
     @GetMapping("/groups")
-    public ResponseEntity<List<String>> getAllGroups() {
+    public ResponseEntity<List<GroupDTO.Response.GetGroupInfo>> getAllGroups() {
         var all = deviceService.getAllGroups();
         return ResponseEntity.ok(all);
     }

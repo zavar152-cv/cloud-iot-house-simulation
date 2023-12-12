@@ -2,7 +2,6 @@ package ru.itmo.zavar.service.impl;
 
 import jakarta.annotation.PostConstruct;
 import jakarta.persistence.EntityNotFoundException;
-import lombok.NoArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.quartz.*;
@@ -369,9 +368,9 @@ public class SchedulerServiceImpl implements SchedulerService {
     }
 
     @Override
-    public SimulationDTO.Response.GetSchedule getSchedulerForSimulation() throws NoSuchElementException {
+    public SimulationDTO.Response.GetSimulationInfo getSimulationInfo() throws NoSuchElementException {
         StateEntity stateEntity = stateRepository.findById(1L).orElseThrow();
-        return new SimulationDTO.Response.GetSchedule(stateEntity.getStartCronExpression(), stateEntity.getEndCronExpression());
+        return new SimulationDTO.Response.GetSimulationInfo(stateEntity.getSimulationStatus().getName(), stateEntity.getStartCronExpression(), stateEntity.getEndCronExpression());
     }
 
     @DisallowConcurrentExecution

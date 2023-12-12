@@ -62,9 +62,9 @@ public class SchedulerController {
     }
 
     @GetMapping("/simulation")
-    public ResponseEntity<SimulationDTO.Response.GetSchedule> getSimulationScheduleInfo() {
+    public ResponseEntity<SimulationDTO.Response.GetSimulationInfo> getSimulationScheduleInfo() {
         try {
-            SimulationDTO.Response.GetSchedule schedulerForSimulation = schedulerService.getSchedulerForSimulation();
+            SimulationDTO.Response.GetSimulationInfo schedulerForSimulation = schedulerService.getSimulationInfo();
             return ResponseEntity.ok(schedulerForSimulation);
         } catch (NoSuchElementException e) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());

@@ -1,5 +1,6 @@
 package ru.itmo.zavar.dto;
 
+import jakarta.validation.constraints.NotBlank;
 import lombok.Value;
 
 public enum SimulationDTO {
@@ -11,6 +12,11 @@ public enum SimulationDTO {
 
     private interface EndCron {
         String getEndCronExpression();
+    }
+
+    private interface StatusName {
+        @NotBlank
+        String getStatus();
     }
 
     public enum Request {
@@ -25,7 +31,8 @@ public enum SimulationDTO {
     public enum Response {
         ;
         @Value
-        public static class GetSchedule implements StartCron, EndCron {
+        public static class GetSimulationInfo implements StartCron, EndCron, StatusName {
+            String status;
             String startCronExpression;
             String endCronExpression;
         }
