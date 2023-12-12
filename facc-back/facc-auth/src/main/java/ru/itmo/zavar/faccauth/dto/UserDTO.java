@@ -30,6 +30,11 @@ public enum UserDTO {
         String getPassword();
     }
 
+    private interface OldPassword {
+        @NotBlank
+        String getOldPassword();
+    }
+
     private interface RoleList {
         @NotNull
         Set<String> getRoles();
@@ -49,6 +54,19 @@ public enum UserDTO {
         @NoArgsConstructor(force = true)
         public static class ChangeRole implements Username {
             String username;
+        }
+
+        @Value
+        @NoArgsConstructor(force = true)
+        public static class ChangeName implements Username {
+            String username;
+        }
+
+        @Value
+        public static class ChangePassword implements OldPassword, Password {
+            String oldPassword;
+            @ValidPassword
+            String password;
         }
 
         @Value

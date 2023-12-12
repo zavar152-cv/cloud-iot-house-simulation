@@ -10,6 +10,8 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -24,6 +26,9 @@ import ru.itmo.zavar.faccauth.service.CloudLoggingService;
 import ru.itmo.zavar.faccauth.util.RoleConstants;
 import ru.itmo.zavar.faccauth.util.SpringErrorMessage;
 import yandex.cloud.api.logging.v1.LogEntryOuterClass;
+
+import java.util.List;
+import java.util.NoSuchElementException;
 
 @Tag(name = "AuthenticationController", description = "Provides methods for authentication, role changing and token validation")
 @RestController
@@ -50,6 +55,36 @@ public class AuthenticationController {
             return ResponseEntity.ok(response);
         } catch (IllegalArgumentException exception) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, exception.getMessage());
+        }
+    }
+
+    @Operation(summary = "Returns all users info")
+    @GetMapping("/users")
+    public ResponseEntity<List<UserDTO.Response.UserDetails>> getAllUsers () {
+        return ResponseEntity.ok(authenticationService.getAllUserDetails());
+    }
+
+    @Operation(summary = "Updates user's name")
+    @PutMapping("/users/{id}/name")
+    public ResponseEntity<?> updateUserName(@PathVariable @NotNull @Positive Long id, @Valid @RequestBody UserDTO.Request.ChangeName changeName) {
+        try {
+            authenticationService.updateUserName(id, changeName.getUsername());
+            return ResponseEntity.ok().build();
+        } catch (NoSuchElementException e) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
+        }
+    }
+
+    @Operation(summary = "Updates user's password")
+    @PutMapping("/users/{id}/password")
+    public ResponseEntity<?> updateUserPassword(@PathVariable @NotNull @Positive Long id, @Valid @RequestBody UserDTO.Request.ChangePassword changePassword) {
+        try {
+            authenticationService.updateUserPassword(id, changePassword.getOldPassword(), changePassword.getPassword());
+            return ResponseEntity.ok().build();
+        } catch (NoSuchElementException e) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
+        } catch (IllegalArgumentException e) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
         }
     }
 

@@ -8,6 +8,8 @@ import ru.itmo.zavar.faccauth.entity.UserEntity;
 import ru.itmo.zavar.faccauth.repo.UserRepository;
 import ru.itmo.zavar.faccauth.service.UserService;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -34,5 +36,13 @@ public class UserServiceImpl implements UserService {
     @Override
     public Optional<UserEntity> findByUsername(String username) {
         return userRepository.findByUsername(username);
+    }
+
+    @Override
+    public List<UserEntity> findAll() {
+        Iterable<UserEntity> iterable = userRepository.findAll();
+        List<UserEntity> all = new ArrayList<>();
+        iterable.forEach(all::add);
+        return all;
     }
 }
