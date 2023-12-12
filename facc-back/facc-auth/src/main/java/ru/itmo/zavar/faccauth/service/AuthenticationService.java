@@ -15,9 +15,9 @@ public interface AuthenticationService {
 
     List<UserDTO.Response.UserDetails> getAllUserDetails();
 
-    void grantAdmin(String username) throws IllegalArgumentException, UsernameNotFoundException, EntityNotFoundException;
+    void grantAdmin(Long id) throws IllegalArgumentException, UsernameNotFoundException, EntityNotFoundException;
 
-    void revokeAdmin(String username) throws IllegalArgumentException, UsernameNotFoundException, EntityNotFoundException;
+    void revokeAdmin(Long id) throws IllegalArgumentException, UsernameNotFoundException, EntityNotFoundException;
 
     void updateUserName(Long id, String newUsername) throws NoSuchElementException;
 

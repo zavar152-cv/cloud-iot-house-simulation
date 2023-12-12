@@ -47,8 +47,8 @@ public enum UserDTO {
 
         @Value
         @NoArgsConstructor(force = true)
-        public static class ChangeRole implements Username {
-            String username;
+        public static class ChangeRole implements Id {
+            Long id;
         }
 
         @Value

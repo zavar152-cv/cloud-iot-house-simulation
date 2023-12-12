@@ -98,8 +98,8 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     }
 
     @Override
-    public void grantAdmin(String username) throws IllegalArgumentException, UsernameNotFoundException, EntityNotFoundException {
-        Optional<UserEntity> optionalUserEntity = userService.findByUsername(username);
+    public void grantAdmin(Long id) throws IllegalArgumentException, UsernameNotFoundException, EntityNotFoundException {
+        Optional<UserEntity> optionalUserEntity = userService.findById(id);
         UserEntity userEntity = optionalUserEntity.orElseThrow(() -> new UsernameNotFoundException("User not found"));
         Optional<RoleEntity> optionalRoleEntity = roleService.getAdminRole();
         RoleEntity roleEntity = optionalRoleEntity.orElseThrow(() -> new EntityNotFoundException("Role not found"));
@@ -112,8 +112,8 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     }
 
     @Override
-    public void revokeAdmin(String username) throws IllegalArgumentException, UsernameNotFoundException, EntityNotFoundException {
-        Optional<UserEntity> optionalUserEntity = userService.findByUsername(username);
+    public void revokeAdmin(Long id) throws IllegalArgumentException, UsernameNotFoundException, EntityNotFoundException {
+        Optional<UserEntity> optionalUserEntity = userService.findById(id);
         UserEntity userEntity = optionalUserEntity.orElseThrow(() -> new UsernameNotFoundException("User not found"));
         Optional<RoleEntity> optionalRoleEntity = roleService.getAdminRole();
         RoleEntity roleEntity = optionalRoleEntity.orElseThrow(() -> new EntityNotFoundException("Role not found"));
