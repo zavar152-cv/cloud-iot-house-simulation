@@ -1,9 +1,13 @@
 package ru.itmo.zavar.service.impl;
 
+import jakarta.annotation.PostConstruct;
+import jakarta.annotation.PreDestroy;
 import jakarta.persistence.EntityExistsException;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.eclipse.paho.client.mqttv3.MqttException;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.itmo.zavar.dto.DeviceDTO;
@@ -14,6 +18,7 @@ import ru.itmo.zavar.entity.DeviceEntity;
 import ru.itmo.zavar.entity.DeviceOnEntity;
 import ru.itmo.zavar.entity.TypeEntity;
 import ru.itmo.zavar.model.JobGroup;
+import ru.itmo.zavar.mqtt.MqttSession;
 import ru.itmo.zavar.repo.DeviceOnRepository;
 import ru.itmo.zavar.repo.DeviceRepository;
 import ru.itmo.zavar.repo.GroupOnRepository;
@@ -35,6 +40,40 @@ public class DeviceServiceImpl implements DeviceService {
     private final TypeRepository typeRepository;
     private final DeviceOnRepository deviceOnRepository;
     private final GroupOnRepository groupOnRepository;
+
+    @Value("${yandex.mqtt.broker-url}")
+    private String mqttBrokerUrl;
+
+    @Value("${yandex.mqtt.registry-id}")
+    private String mqttRegistryId;
+
+    private List<MqttSession> sessions = new ArrayList<>();
+
+    @PostConstruct
+    public void init() {
+        Iterable<DeviceEntity> iterable = deviceRepository.findAll();
+        iterable.forEach(deviceEntity -> {
+            try {
+                MqttSession mqttSession = new MqttSession(mqttBrokerUrl, getClass().getName(), mqttRegistryId);
+                mqttSession.start();
+                mqttSession.subscribe("$devices/" + deviceEntity.getId() + "/events");
+                sessions.add(mqttSession);
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        });
+    }
+
+    @PreDestroy
+    public void destroy() {
+        sessions.forEach(mqttSession -> {
+            try {
+                mqttSession.stop();
+            } catch (MqttException e) {
+                throw new RuntimeException(e);
+            }
+        });
+    }
 
     @Override
     public void createDevice(String id, String name, JobGroup group, Long typeId) throws EntityNotFoundException, EntityExistsException {
