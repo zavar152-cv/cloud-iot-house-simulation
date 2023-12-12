@@ -94,12 +94,10 @@ public enum TimetableEntryDTO {
         }
 
         @Value
-        public static class UpdateEntry implements Name, CronExpression, Description, ActionId, Arguments {
+        public static class UpdateEntry implements Name, CronExpression, Description {
             String name;
             String cronExpression;
             String description;
-            Long actionId;
-            List<String> arguments;
         }
     }
 
