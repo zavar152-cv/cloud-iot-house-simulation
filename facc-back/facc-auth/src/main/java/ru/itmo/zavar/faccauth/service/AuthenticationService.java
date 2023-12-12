@@ -21,7 +21,7 @@ public interface AuthenticationService {
 
     void updateUserName(Long id, String newUsername) throws NoSuchElementException;
 
-    void updateUserPassword(Long id, String oldPassword, String newPassword) throws NoSuchElementException, IllegalArgumentException;
+    void updateUserPassword(Long id, String newPassword) throws NoSuchElementException, IllegalArgumentException;
 
     boolean isTokenValid(String username, String token) throws UsernameNotFoundException;
 

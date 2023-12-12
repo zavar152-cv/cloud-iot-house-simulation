@@ -133,14 +133,10 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     }
 
     @Override
-    public void updateUserPassword(Long id, String oldPassword, String newPassword) throws NoSuchElementException, IllegalArgumentException {
+    public void updateUserPassword(Long id, String newPassword) throws NoSuchElementException, IllegalArgumentException {
         UserEntity userEntity = userService.findById(id).orElseThrow();
-        if (!passwordEncoder.matches(oldPassword, userEntity.getPassword())) {
-            throw new IllegalArgumentException("Invalid old password");
-        } else {
-            userEntity.setPassword(passwordEncoder.encode(newPassword));
-            userService.saveUser(userEntity);
-        }
+        userEntity.setPassword(passwordEncoder.encode(newPassword));
+        userService.saveUser(userEntity);
     }
 
     @Override
