@@ -3,6 +3,7 @@ package ru.itmo.zavar.faccauth.service;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import ru.itmo.zavar.faccauth.entity.UserEntity;
 
+import java.util.List;
 import java.util.Optional;
 
 public interface UserService {
@@ -13,4 +14,6 @@ public interface UserService {
     Optional<UserEntity> findById(Long id);
 
     Optional<UserEntity> findByUsername(String username);
+
+    List<UserEntity> findAll();
 }

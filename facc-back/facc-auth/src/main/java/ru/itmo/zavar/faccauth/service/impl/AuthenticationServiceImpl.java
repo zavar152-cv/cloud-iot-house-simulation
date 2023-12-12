@@ -20,9 +20,7 @@ import ru.itmo.zavar.faccauth.service.*;
 import ru.itmo.zavar.faccauth.util.RoleConstants;
 import yandex.cloud.api.logging.v1.LogEntryOuterClass;
 
-import java.util.Date;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -90,12 +88,22 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     }
 
     @Override
+    public List<UserDTO.Response.UserDetails> getAllUserDetails() {
+        List<UserDTO.Response.UserDetails> all = new ArrayList<>();
+        userService.findAll().forEach(userEntity -> {
+            all.add(new UserDTO.Response.UserDetails(userEntity.getId(), userEntity.getUsername(),
+                    userEntity.getRoles().stream().map(RoleEntity::getName).collect(Collectors.toUnmodifiableSet())));
+        });
+        return all;
+    }
+
+    @Override
     public void grantAdmin(String username) throws IllegalArgumentException, UsernameNotFoundException, EntityNotFoundException {
         Optional<UserEntity> optionalUserEntity = userService.findByUsername(username);
         UserEntity userEntity = optionalUserEntity.orElseThrow(() -> new UsernameNotFoundException("User not found"));
         Optional<RoleEntity> optionalRoleEntity = roleService.getAdminRole();
         RoleEntity roleEntity = optionalRoleEntity.orElseThrow(() -> new EntityNotFoundException("Role not found"));
-        if(!userEntity.getRoles().contains(roleEntity)) {
+        if (!userEntity.getRoles().contains(roleEntity)) {
             userEntity.getRoles().add(roleEntity);
             userService.saveUser(userEntity);
         } else {
@@ -109,11 +117,29 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         UserEntity userEntity = optionalUserEntity.orElseThrow(() -> new UsernameNotFoundException("User not found"));
         Optional<RoleEntity> optionalRoleEntity = roleService.getAdminRole();
         RoleEntity roleEntity = optionalRoleEntity.orElseThrow(() -> new EntityNotFoundException("Role not found"));
-        if(userEntity.getRoles().contains(roleEntity)) {
+        if (userEntity.getRoles().contains(roleEntity)) {
             userEntity.getRoles().remove(roleEntity);
             userService.saveUser(userEntity);
         } else {
             throw new IllegalArgumentException("User didn't have " + RoleConstants.ADMIN + " role");
+        }
+    }
+
+    @Override
+    public void updateUserName(Long id, String newUsername) throws NoSuchElementException {
+        UserEntity userEntity = userService.findById(id).orElseThrow();
+        userEntity.setUsername(newUsername);
+        userService.saveUser(userEntity);
+    }
+
+    @Override
+    public void updateUserPassword(Long id, String oldPassword, String newPassword) throws NoSuchElementException, IllegalArgumentException {
+        UserEntity userEntity = userService.findById(id).orElseThrow();
+        if (!passwordEncoder.matches(oldPassword, userEntity.getPassword())) {
+            throw new IllegalArgumentException("Invalid old password");
+        } else {
+            userEntity.setPassword(passwordEncoder.encode(newPassword));
+            userService.saveUser(userEntity);
         }
     }
 
