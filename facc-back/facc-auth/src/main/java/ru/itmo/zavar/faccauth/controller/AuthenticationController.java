@@ -134,10 +134,10 @@ public class AuthenticationController {
     @PutMapping("/grantAdmin")
     public ResponseEntity<?> grantAdmin(@Valid @RequestBody UserDTO.Request.ChangeRole request) {
         try {
-            authenticationService.grantAdmin(request.getUsername());
-            log.info("Granted {} role to user {}", RoleConstants.ADMIN, request.getUsername());
+            authenticationService.grantAdmin(request.getId());
+            log.info("Granted {} role to user with id {}", RoleConstants.ADMIN, request.getId());
             cloudLoggingService.log(LogEntryOuterClass.LogLevel.Level.INFO, "AuthenticationService",
-                    "Granted {} role to user {}", RoleConstants.ADMIN, request.getUsername());
+                    "Granted {} role to user with id {}", RoleConstants.ADMIN, request.getId());
             return ResponseEntity.ok().build();
         } catch (IllegalArgumentException exception) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, exception.getMessage());
@@ -158,10 +158,10 @@ public class AuthenticationController {
     @PutMapping("/revokeAdmin")
     public ResponseEntity<?> revokeAdmin(@Valid @RequestBody UserDTO.Request.ChangeRole request) {
         try {
-            authenticationService.revokeAdmin(request.getUsername());
-            log.info("Revoked {} role from user {}", RoleConstants.ADMIN, request.getUsername());
+            authenticationService.revokeAdmin(request.getId());
+            log.info("Revoked {} role from user with id {}", RoleConstants.ADMIN, request.getId());
             cloudLoggingService.log(LogEntryOuterClass.LogLevel.Level.INFO, "AuthenticationService",
-                    "Revoked {} role from user {}", RoleConstants.ADMIN, request.getUsername());
+                    "Revoked {} role from user with id {}", RoleConstants.ADMIN, request.getId());
             return ResponseEntity.ok().build();
         } catch (IllegalArgumentException exception) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, exception.getMessage());
