@@ -425,9 +425,9 @@ public class SchedulerServiceImpl implements SchedulerService {
     @Override
     public void updateSchedulerForSimulation(Long id, String startCron, String endCron) throws SchedulerException, NoSuchElementException {
         SimulationTimetableEntity simulationTimetableEntity = simulationTimetableRepository.findById(id).orElseThrow();
-        String name = simulationTimetableEntity.getName();
-        removeSchedulerForSimulation(id);
-        addSchedulerForSimulation(name, startCron, endCron);
+        simulationTimetableEntity.setStartCronExpression(startCron);
+        simulationTimetableEntity.setEndCronExpression(endCron);
+        simulationTimetableRepository.save(simulationTimetableEntity);
     }
 
     @Override
@@ -437,7 +437,7 @@ public class SchedulerServiceImpl implements SchedulerService {
         schedulerFactoryBean.getScheduler().deleteJob(new JobKey(simulationTimetableEntity.getName() + enableSimulationJobName, simulationJobGroup));
         schedulerFactoryBean.getScheduler().deleteJob(new JobKey(simulationTimetableEntity.getName() + disableSimulationJobName, simulationJobGroup));
 
-        simulationTimetableRepository.deleteById(id);
+        simulationTimetableRepository.delete(simulationTimetableEntity);
         log.info("Removed simulation schedule");
         cloudLoggingService.log(LogEntryOuterClass.LogLevel.Level.INFO, getClass().getName(), "Removed simulation schedule");
     }
