@@ -4,8 +4,8 @@ RUN apt-get -y update
 
 WORKDIR /front
 COPY . .
-RUN npm i uuid && npm install && npm run build
+RUN npm i uuid && npm install
 
 EXPOSE 3000
 
-CMD [ "npm", "run", "preview" ]
+CMD [ "npm", "run", "dev" ]

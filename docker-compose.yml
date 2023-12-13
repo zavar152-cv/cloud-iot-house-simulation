@@ -5,23 +5,25 @@ services:
     hostname: auth
     image: justdan777/facc-auth:0.0.1-SNAPSHOT
     environment:
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://localhost:5432/db-facc
-      - SPRING_DATASOURCE_USERNAME=postgres
-      - SPRING_DATASOURCE_PASSWORD=root
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://rc1a-jrejwwga94ggebsz.mdb.yandexcloud.net:6432/db-facc?targetServerType=master&ssl=true&sslmode=verify-full
+      - SPRING_DATASOURCE_USERNAME=db-user
+      - SPRING_DATASOURCE_PASSWORD=facc-db-user
     restart: always
 
   controller:
     hostname: control
     image: justdan777/facc-control:0.0.1-SNAPSHOT
     environment:
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://localhost:5432/db-facc
-      - SPRING_DATASOURCE_USERNAME=postgres
-      - SPRING_DATASOURCE_PASSWORD=root
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://rc1a-jrejwwga94ggebsz.mdb.yandexcloud.net:6432/db-facc?targetServerType=master&ssl=true&sslmode=verify-full
+      - SPRING_DATASOURCE_USERNAME=db-user
+      - SPRING_DATASOURCE_PASSWORD=facc-db-user
     restart: always
 
   front:
     hostname: front
     build: ./facc-front
+    ports:
+      - "3000:3000"
     image: justdan777/facc-front
     restart: always
 
