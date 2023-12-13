@@ -9,6 +9,7 @@ springdoc:
   packages-to-scan: ru.itmo.zavar.controller
   api-docs:
     path: /api-docs
+  paths-to-exclude: /actionEntities/**, /commandForActionEntities/**, /fileEntities/**, /groupOnEntities/**, /groupOnEntities/**, /profile/**, /simulationTimetableEntities/**, /stateEntities/**, /statusEntities/**,  /timetableEntryEntities/**, /typeEntities/**, /deviceOnEntities/**, /deviceEntities/**
 spring:
   sql:
     init:
