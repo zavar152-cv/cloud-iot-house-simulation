@@ -1,5 +1,6 @@
 package ru.itmo.zavar;
 
+import com.google.common.io.Resources;
 import io.grpc.ManagedChannelBuilder;
 import io.grpc.Metadata;
 import io.grpc.stub.MetadataUtils;
@@ -15,7 +16,10 @@ import yandex.cloud.sdk.auth.Auth;
 import yandex.cloud.sdk.auth.provider.CredentialProvider;
 
 import java.io.File;
+import java.io.IOException;
 import java.net.URISyntaxException;
+import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Paths;
 import java.util.Objects;
 import java.util.UUID;
@@ -41,10 +45,11 @@ public class FaccControlApplication {
     }
 
     @Bean
-    public ServiceFactory yandexCloudServiceFactory() throws URISyntaxException {
+    public ServiceFactory yandexCloudServiceFactory() throws URISyntaxException, IOException {
+        URL url = getClass().getResource(authKeyFile);
+        String content = Resources.toString(url, StandardCharsets.UTF_8);
         CredentialProvider credentialProvider =
-                Auth.apiKeyBuilder().fromFile(Paths.get(Objects.requireNonNull(CloudLoggingServiceImpl.class
-                                .getResource(authKeyFile)).toURI()))
+                Auth.apiKeyBuilder().fromJson(content)
                         .build();
 
         return ServiceFactory.builder()
