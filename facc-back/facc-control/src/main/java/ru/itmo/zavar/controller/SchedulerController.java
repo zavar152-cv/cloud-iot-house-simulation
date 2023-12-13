@@ -1,5 +1,6 @@
 package ru.itmo.zavar.controller;
 
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
@@ -20,6 +21,7 @@ import ru.itmo.zavar.service.SchedulerService;
 import java.util.List;
 import java.util.NoSuchElementException;
 
+@Tag(name = "SchedulerController", description = "Provides methods for scheduling")
 @RestController
 @RequestMapping("/scheduler")
 @RequiredArgsConstructor

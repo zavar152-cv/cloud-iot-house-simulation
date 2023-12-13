@@ -1,5 +1,6 @@
 package ru.itmo.zavar.controller;
 
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.persistence.EntityExistsException;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.Valid;
@@ -27,6 +28,7 @@ import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Optional;
 
+@Tag(name = "DeviceController", description = "Provides methods for devices")
 @RestController
 @RequestMapping("/device")
 @RequiredArgsConstructor
