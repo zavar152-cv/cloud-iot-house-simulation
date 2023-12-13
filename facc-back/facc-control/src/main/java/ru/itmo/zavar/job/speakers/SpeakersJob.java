@@ -54,6 +54,9 @@ public class SpeakersJob extends QuartzJobBean {
     @Value("${yandex.mqtt.broker-url}")
     private String mqttBrokerUrl;
 
+    @Value("${yandex.mqtt.registry-id}")
+    private String mqttRegistryId;
+
     @Override
     protected void executeInternal(@NonNull JobExecutionContext context) throws JobExecutionException {
         Long id = (Long) context.getMergedJobDataMap().get("id");
@@ -128,11 +131,12 @@ public class SpeakersJob extends QuartzJobBean {
     }
 
     private void sendToDevice(String deviceId, String action, List<String> arguments, byte[] content) {
-        log.info("Sending to device...");
+        log.info("Sending to device {} ..." , deviceId);
+        cloudLoggingService.log(LogEntryOuterClass.LogLevel.Level.INFO, getClass().getName(), "Sending to device {} ..." , deviceId);
         try {
-            MqttSession mqttSession = new MqttSession(mqttBrokerUrl, getClass().getName(), deviceId);
+            MqttSession mqttSession = new MqttSession(mqttBrokerUrl, getClass().getSimpleName() + ":" + deviceId, mqttRegistryId);
             mqttSession.start();
-            mqttSession.publish("$devices/" + deviceId + "/events", action + " " + String.join(",", arguments) + " " + new String(content));
+            mqttSession.publish("$devices/" + deviceId + "/commands", action + " " + String.join(",", arguments) + " " + new String(content));
             mqttSession.stop();
         } catch (Exception e) {
             throw new RuntimeException(e);

@@ -47,14 +47,14 @@ public class DeviceServiceImpl implements DeviceService {
     @Value("${yandex.mqtt.registry-id}")
     private String mqttRegistryId;
 
-    private List<MqttSession> sessions = new ArrayList<>();
+    private final List<MqttSession> sessions = new ArrayList<>();
 
     @PostConstruct
     public void init() {
         Iterable<DeviceEntity> iterable = deviceRepository.findAll();
         iterable.forEach(deviceEntity -> {
             try {
-                MqttSession mqttSession = new MqttSession(mqttBrokerUrl, getClass().getName(), mqttRegistryId);
+                MqttSession mqttSession = new MqttSession(mqttBrokerUrl, getClass().getSimpleName() + ":" + deviceEntity.getId(), mqttRegistryId);
                 mqttSession.start();
                 mqttSession.subscribe("$devices/" + deviceEntity.getId() + "/events");
                 sessions.add(mqttSession);
