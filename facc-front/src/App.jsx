@@ -2,6 +2,7 @@ import React from 'react';
 import { Outlet, Route, Routes } from 'react-router';
 import { BrowserRouter } from 'react-router-dom';
 import { Login } from './login/Login';
+import {ControlPanel} from './controlPanel/ControlPanel.jsx';
 
 export const App = () => {
 	return (
@@ -13,7 +14,7 @@ export const App = () => {
 				>
 					<Route
 						index
-						element={null}
+						element={<ControlPanel/>}
 					/>
 					<Route
 						path='login'
