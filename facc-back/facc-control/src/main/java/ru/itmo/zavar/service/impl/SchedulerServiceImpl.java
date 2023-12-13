@@ -24,7 +24,9 @@ import ru.itmo.zavar.job.speakers.SpeakersJob;
 import ru.itmo.zavar.model.JobGroup;
 import ru.itmo.zavar.model.JobStatus;
 import ru.itmo.zavar.repo.*;
+import ru.itmo.zavar.service.CloudLoggingService;
 import ru.itmo.zavar.service.SchedulerService;
+import yandex.cloud.api.logging.v1.LogEntryOuterClass;
 
 import java.util.*;
 
@@ -43,6 +45,7 @@ public class SchedulerServiceImpl implements SchedulerService {
     private final StateRepository stateRepository;
     private final StatusRepository statusRepository;
     private final SimulationTimetableRepository simulationTimetableRepository;
+    private final CloudLoggingService cloudLoggingService;
     @Value("${status.enabled}")
     private String enabledStatus;
     @Value("${status.disabled}")
@@ -96,6 +99,7 @@ public class SchedulerServiceImpl implements SchedulerService {
                 scheduler.scheduleJob(enableJobDetail, enableTrigger);
                 scheduler.scheduleJob(disableJobDetail, disableTrigger);
                 log.info("Scheduled simulation with start cron: {} and end cron {}", entity.getStartCronExpression(), entity.getEndCronExpression());
+                cloudLoggingService.log(LogEntryOuterClass.LogLevel.Level.INFO, getClass().getName(), "Scheduled simulation with start cron: {} and end cron {}", entity.getStartCronExpression(), entity.getEndCronExpression());
             } catch (SchedulerException e) {
                 throw new RuntimeException(e);
             }
@@ -130,6 +134,7 @@ public class SchedulerServiceImpl implements SchedulerService {
                         .jobGroup(group).build();
                 TimetableEntryEntity savedEntry = timetableEntryRepository.save(entryEntity);
                 log.info("job {} with id {} saved", savedEntry.getName(), savedEntry.getId());
+                cloudLoggingService.log(LogEntryOuterClass.LogLevel.Level.INFO, getClass().getName(), "job {} with id {} saved", savedEntry.getName(), savedEntry.getId());
                 jobDetail = scheduleCreator.createJobForDevice(jobClass, false, context, name, group.name(), deviceEntity.getId(), savedEntry.getId());
 
                 jobDetail.getJobDataMap().put("arguments", arguments);
@@ -140,13 +145,16 @@ public class SchedulerServiceImpl implements SchedulerService {
                 if (simulationEnabled) {
                     scheduler.scheduleJob(jobDetail, trigger);
                     log.info("job {} with id {} scheduled", savedEntry.getName(), savedEntry.getId());
+                    cloudLoggingService.log(LogEntryOuterClass.LogLevel.Level.INFO, getClass().getName(), "job {} with id {} scheduled", savedEntry.getName(), savedEntry.getId());
                 }
             } else {
-                log.error("scheduleNewJobRequest.jobAlreadyExist");
+                log.error("Job is already exists");
+                cloudLoggingService.log(LogEntryOuterClass.LogLevel.Level.ERROR, getClass().getName(), "Job is already exists", new IllegalArgumentException("Job is already exists"));
                 throw new IllegalArgumentException("Job is already exists");
             }
         } catch (SchedulerException e) {
             log.error(e.getMessage(), e);
+            cloudLoggingService.log(LogEntryOuterClass.LogLevel.Level.ERROR, getClass().getName(), e.getMessage(), e);
             throw e;
         }
     }
@@ -185,6 +193,7 @@ public class SchedulerServiceImpl implements SchedulerService {
             timetableEntryEntity.setArguments(arguments);
             timetableEntryRepository.save(timetableEntryEntity);
             log.info("job with id {} updated", timetableEntryEntity.getId());
+            cloudLoggingService.log(LogEntryOuterClass.LogLevel.Level.INFO, getClass().getName(), "job with id {} updated", timetableEntryEntity.getId());
 
             Class<? extends QuartzJobBean> jobClass = getClassByGroup(timetableEntryEntity.getJobGroup());
 
@@ -199,10 +208,12 @@ public class SchedulerServiceImpl implements SchedulerService {
                 Scheduler scheduler = schedulerFactoryBean.getScheduler();
                 scheduler.scheduleJob(jobDetail, trigger);
                 log.info("job {} with id {} scheduled", timetableEntryEntity.getName(), timetableEntryEntity.getId());
+                cloudLoggingService.log(LogEntryOuterClass.LogLevel.Level.INFO, getClass().getName(), "job {} with id {} scheduled", timetableEntryEntity.getName(), timetableEntryEntity.getId());
             }
 
         } catch (SchedulerException e) {
             log.error(e.getMessage(), e);
+            cloudLoggingService.log(LogEntryOuterClass.LogLevel.Level.ERROR, getClass().getName(), e.getMessage(), e);
             throw e;
         }
     }
@@ -216,12 +227,15 @@ public class SchedulerServiceImpl implements SchedulerService {
             if (deleted) {
                 timetableEntryRepository.deleteById(id);
                 log.info("job {} with id {} deleted", timetableEntryEntity.getName(), timetableEntryEntity.getId());
+                cloudLoggingService.log(LogEntryOuterClass.LogLevel.Level.INFO, getClass().getName(), "job {} with id {} deleted", timetableEntryEntity.getName(), timetableEntryEntity.getId());
             } else {
                 log.info("job {} with id {} can't be deleted", timetableEntryEntity.getName(), timetableEntryEntity.getId());
+                cloudLoggingService.log(LogEntryOuterClass.LogLevel.Level.INFO, getClass().getName(), "job {} with id {} can't be deleted", timetableEntryEntity.getName(), timetableEntryEntity.getId());
             }
             return deleted;
         } catch (SchedulerException e) {
             log.error("Failed to delete job with id - {}", id, e);
+            cloudLoggingService.log(LogEntryOuterClass.LogLevel.Level.ERROR, getClass().getName(), "Failed to delete new job with id - " + id, e);
             throw e;
         }
     }
@@ -237,8 +251,10 @@ public class SchedulerServiceImpl implements SchedulerService {
             timetableEntryEntity.setJobStatus(JobStatus.PAUSED);
             timetableEntryRepository.save(timetableEntryEntity);
             log.info("job {} with id {} paused", timetableEntryEntity.getName(), timetableEntryEntity.getId());
+            cloudLoggingService.log(LogEntryOuterClass.LogLevel.Level.INFO, getClass().getName(), "job {} with id {} paused", timetableEntryEntity.getName(), timetableEntryEntity.getId());
         } catch (SchedulerException e) {
             log.error("Failed to pause job with id - {}", id, e);
+            cloudLoggingService.log(LogEntryOuterClass.LogLevel.Level.ERROR, getClass().getName(), "Failed to pause new job with id - " + id, e);
             throw e;
         }
     }
@@ -254,8 +270,10 @@ public class SchedulerServiceImpl implements SchedulerService {
             timetableEntryEntity.setJobStatus(JobStatus.SCHEDULED);
             timetableEntryRepository.save(timetableEntryEntity);
             log.info("job {} with id {} resumed", timetableEntryEntity.getName(), timetableEntryEntity.getId());
+            cloudLoggingService.log(LogEntryOuterClass.LogLevel.Level.INFO, getClass().getName(), "job {} with id {} resumed", timetableEntryEntity.getName(), timetableEntryEntity.getId());
         } catch (SchedulerException e) {
             log.error("Failed to resume job with id - {}", id, e);
+            cloudLoggingService.log(LogEntryOuterClass.LogLevel.Level.ERROR, getClass().getName(), "Failed to resume new job with id - " + id, e);
             throw e;
         }
     }
@@ -271,8 +289,10 @@ public class SchedulerServiceImpl implements SchedulerService {
             timetableEntryEntity.setJobStatus(JobStatus.EXECUTING);
             timetableEntryRepository.save(timetableEntryEntity);
             log.info("job {} with id {} started now", timetableEntryEntity.getName(), timetableEntryEntity.getId());
+            cloudLoggingService.log(LogEntryOuterClass.LogLevel.Level.INFO, getClass().getName(), "job {} with id {} started now", timetableEntryEntity.getName(), timetableEntryEntity.getId());
         } catch (SchedulerException e) {
             log.error("Failed to start new job with id - {}", id, e);
+            cloudLoggingService.log(LogEntryOuterClass.LogLevel.Level.ERROR, getClass().getName(), "Failed to start new job with id - " + id, e);
             throw e;
         }
     }
@@ -314,6 +334,7 @@ public class SchedulerServiceImpl implements SchedulerService {
         simulationEnabled = true;
         List<TimetableEntryDTO.Response.TimetableEntry> allEntries = getAllEntries();
         log.info("Loaded {} timetable entries", allEntries.size());
+        cloudLoggingService.log(LogEntryOuterClass.LogLevel.Level.INFO, getClass().getName(), "Loaded {} timetable entries", allEntries.size());
         Scheduler scheduler = schedulerFactoryBean.getScheduler();
         allEntries.forEach(timetableEntry -> {
             Class<? extends QuartzJobBean> jobClass = getClassByGroup(timetableEntry.getGroup());
@@ -334,8 +355,10 @@ public class SchedulerServiceImpl implements SchedulerService {
                 log.error(e.getMessage(), e);
             }
             log.info("job {} with id {} scheduled", timetableEntry.getName(), timetableEntry.getId());
+            cloudLoggingService.log(LogEntryOuterClass.LogLevel.Level.INFO, getClass().getName(), "job {} with id {} scheduled", timetableEntry.getName(), timetableEntry.getId());
         });
         log.info("Simulation enabled");
+        cloudLoggingService.log(LogEntryOuterClass.LogLevel.Level.INFO, getClass().getName(), "Simulation enabled");
     }
 
     @Override
@@ -359,6 +382,7 @@ public class SchedulerServiceImpl implements SchedulerService {
             }
         });
         log.info("Simulation disabled");
+        cloudLoggingService.log(LogEntryOuterClass.LogLevel.Level.INFO, getClass().getName(), "Simulation disabled");
     }
 
     @Override
@@ -392,6 +416,7 @@ public class SchedulerServiceImpl implements SchedulerService {
             scheduler.scheduleJob(disableJobDetail, disableTrigger);
 
             log.info("Scheduled simulation with start cron: {} and end cron {}", startCron, endCron);
+            cloudLoggingService.log(LogEntryOuterClass.LogLevel.Level.INFO, getClass().getName(), "Scheduled simulation with start cron: {} and end cron {}", startCron, endCron);
         } else {
             throw new IllegalArgumentException("Job is already exists");
         }
@@ -414,6 +439,7 @@ public class SchedulerServiceImpl implements SchedulerService {
 
         simulationTimetableRepository.deleteById(id);
         log.info("Removed simulation schedule");
+        cloudLoggingService.log(LogEntryOuterClass.LogLevel.Level.INFO, getClass().getName(), "Removed simulation schedule");
     }
 
     @Override

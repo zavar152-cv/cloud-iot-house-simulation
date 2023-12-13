@@ -5,6 +5,10 @@ server:
     include-stacktrace: never
   servlet:
     context-path: /api/v1
+springdoc:
+  packages-to-scan: ru.itmo.zavar.controller
+  api-docs:
+    path: /api-docs
 spring:
   sql:
     init:
