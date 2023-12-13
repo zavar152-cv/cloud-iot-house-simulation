@@ -22,8 +22,8 @@ spring:
     hibernate:
       ddl-auto: update
   datasource:
-    username: user_db
-    password: facc
+    username: postgres
+    password: root
     url: jdbc:postgresql://localhost:5432/db-facc
     driver-class-name: org.postgresql.Driver
   mvc:

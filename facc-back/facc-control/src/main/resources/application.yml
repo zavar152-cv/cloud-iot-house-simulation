@@ -25,8 +25,8 @@ spring:
       ddl-auto: update
     defer-datasource-initialization: true
   datasource:
-    username: user_db
-    password: facc
+    username: postgres
+    password: root
     url: jdbc:postgresql://localhost:5432/db-facc
     driver-class-name: org.postgresql.Driver
   mvc:
