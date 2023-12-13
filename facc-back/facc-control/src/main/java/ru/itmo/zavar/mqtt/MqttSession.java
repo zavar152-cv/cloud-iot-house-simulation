@@ -4,7 +4,10 @@ import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.paho.client.mqttv3.*;
+import org.springframework.stereotype.Component;
 import ru.itmo.zavar.FaccControlApplication;
+import ru.itmo.zavar.service.CloudLoggingService;
+import yandex.cloud.api.logging.v1.LogEntryOuterClass;
 
 import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.SSLContext;
@@ -61,11 +64,13 @@ public final class MqttSession implements MqttCallback {
     private final MqttConnectOptions connOpts;
     private Runnable onDoneHandler;
     private QoS messageQos = QoS.AT_LEAST_ONCE;
+    private CloudLoggingService cloudLoggingService;
 
-    public MqttSession(String broker, String clientId, String objectId) throws Exception {
+    public MqttSession(String broker, String clientId, String objectId, CloudLoggingService cloudLoggingService) throws Exception {
         File file = new File(Objects.requireNonNull(getClass().getResource("/ssl/" + objectId)).getFile());
         String certsDir = file.getAbsolutePath();
         this.clientId = clientId;
+        this.cloudLoggingService = cloudLoggingService;
         client = new MqttClient(broker, clientId);
         client.setCallback(this);
         connOpts = new MqttConnectOptions();
@@ -75,8 +80,9 @@ public final class MqttSession implements MqttCallback {
         connOpts.setConnectionTimeout(60);
     }
 
-    public MqttSession(String broker, String clientId, String login, String password) throws Exception {
+    public MqttSession(String broker, String clientId, String login, String password, CloudLoggingService cloudLoggingService) throws Exception {
         this.clientId = clientId;
+        this.cloudLoggingService = cloudLoggingService;
         client = new MqttClient(broker, clientId);
         client.setCallback(this);
         connOpts = new MqttConnectOptions();
@@ -99,11 +105,14 @@ public final class MqttSession implements MqttCallback {
     @Override
     public void connectionLost(Throwable cause) {
         log.error("Connection lost for " + clientId, cause);
+        cloudLoggingService.log(LogEntryOuterClass.LogLevel.Level.ERROR, getClass().getName(), "Connection lost for " + clientId, cause);
     }
 
     @Override
     public void messageArrived(String topic, MqttMessage message) throws Exception {
-        log.info("Message arrived for " + clientId + "> " + topic + ": " + message.toString().replace("\n", ""));
+        String s = "Message arrived for " + clientId + "> " + topic + ": " + message.toString().replace("\n", "");
+        log.info(s);
+        cloudLoggingService.log(LogEntryOuterClass.LogLevel.Level.INFO, getClass().getName(), s);
         if(onDoneHandler != null)
             onDoneHandler.run();
     }
@@ -111,6 +120,7 @@ public final class MqttSession implements MqttCallback {
     @Override
     public void deliveryComplete(IMqttDeliveryToken token) {
         log.info("Delivery complete for " + clientId);
+        cloudLoggingService.log(LogEntryOuterClass.LogLevel.Level.INFO, getClass().getName(), "Delivery complete for " + clientId);
     }
 
     public void publish(String topic, String payload) throws MqttException {
@@ -127,11 +137,13 @@ public final class MqttSession implements MqttCallback {
         client.disconnect();
         client.close();
         log.info("Disconnected for " + clientId);
+        cloudLoggingService.log(LogEntryOuterClass.LogLevel.Level.INFO, getClass().getName(), "Disconnected for " + clientId);
     }
 
     public void start() throws Exception {
         client.connect(connOpts);
         log.info("Connected for " + clientId);
+        cloudLoggingService.log(LogEntryOuterClass.LogLevel.Level.INFO, getClass().getName(), "Connected for " + clientId);
     }
 
     private SSLSocketFactory getSocketFactory()

@@ -134,7 +134,7 @@ public class SpeakersJob extends QuartzJobBean {
         log.info("Sending to device {} ..." , deviceId);
         cloudLoggingService.log(LogEntryOuterClass.LogLevel.Level.INFO, getClass().getName(), "Sending to device {} ..." , deviceId);
         try {
-            MqttSession mqttSession = new MqttSession(mqttBrokerUrl, getClass().getSimpleName() + ":" + deviceId, mqttRegistryId);
+            MqttSession mqttSession = new MqttSession(mqttBrokerUrl, getClass().getSimpleName() + ":" + deviceId, mqttRegistryId, cloudLoggingService);
             mqttSession.start();
             mqttSession.publish("$devices/" + deviceId + "/commands", action + " " + String.join(",", arguments) + " " + new String(content));
             mqttSession.stop();

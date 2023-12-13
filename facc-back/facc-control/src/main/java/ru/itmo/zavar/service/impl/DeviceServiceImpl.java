@@ -23,6 +23,7 @@ import ru.itmo.zavar.repo.DeviceOnRepository;
 import ru.itmo.zavar.repo.DeviceRepository;
 import ru.itmo.zavar.repo.GroupOnRepository;
 import ru.itmo.zavar.repo.TypeRepository;
+import ru.itmo.zavar.service.CloudLoggingService;
 import ru.itmo.zavar.service.DeviceService;
 
 import java.util.ArrayList;
@@ -40,6 +41,7 @@ public class DeviceServiceImpl implements DeviceService {
     private final TypeRepository typeRepository;
     private final DeviceOnRepository deviceOnRepository;
     private final GroupOnRepository groupOnRepository;
+    private final CloudLoggingService cloudLoggingService;
 
     @Value("${yandex.mqtt.broker-url}")
     private String mqttBrokerUrl;
@@ -54,7 +56,7 @@ public class DeviceServiceImpl implements DeviceService {
         Iterable<DeviceEntity> iterable = deviceRepository.findAll();
         iterable.forEach(deviceEntity -> {
             try {
-                MqttSession mqttSession = new MqttSession(mqttBrokerUrl, getClass().getSimpleName() + ":" + deviceEntity.getId(), mqttRegistryId);
+                MqttSession mqttSession = new MqttSession(mqttBrokerUrl, getClass().getSimpleName() + ":" + deviceEntity.getId(), mqttRegistryId, cloudLoggingService);
                 mqttSession.start();
                 mqttSession.subscribe("$devices/" + deviceEntity.getId() + "/events");
                 sessions.add(mqttSession);
