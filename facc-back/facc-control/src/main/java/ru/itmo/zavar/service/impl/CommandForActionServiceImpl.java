@@ -33,7 +33,7 @@ public class CommandForActionServiceImpl implements CommandForActionService {
         Iterable<CommandForActionEntity> iterable = commandForActionRepository.findAll();
         List<CommandForActionDTO.Response.CommandForAction> all = new ArrayList<>();
         iterable.forEach(entity -> all.add(new CommandForActionDTO.Response.CommandForAction(entity.getId(), entity.getCommand(),
-                entity.getAction().getId(), entity.getAction().getAction(), entity.getFile().getId(), entity.getFile().getName())));
+                entity.getAction().getId(), entity.getAction().getAction(), entity.getFile() == null ? null : entity.getFile().getId(), entity.getFile() == null ? null : entity.getFile().getName())));
         return all;
     }
 
@@ -41,7 +41,7 @@ public class CommandForActionServiceImpl implements CommandForActionService {
     public CommandForActionDTO.Response.CommandForAction getCommandForAction(Long id) throws NoSuchElementException {
         CommandForActionEntity entity = commandForActionRepository.findById(id).orElseThrow();
         return new CommandForActionDTO.Response.CommandForAction(entity.getId(), entity.getCommand(),
-                entity.getAction().getId(), entity.getAction().getAction(), entity.getFile().getId(), entity.getFile().getName());
+                entity.getAction().getId(), entity.getAction().getAction(), entity.getFile() == null ? null : entity.getFile().getId(), entity.getFile() == null ? null : entity.getFile().getName());
     }
 
     @Override
