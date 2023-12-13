@@ -1,0 +1,43 @@
+version: '3.9'
+
+services:
+  auth:
+    hostname: auth
+    image: justdan777/facc-auth:0.0.1-SNAPSHOT
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://localhost:5432/db-facc
+      - SPRING_DATASOURCE_USERNAME=postgres
+      - SPRING_DATASOURCE_PASSWORD=root
+    restart: always
+
+  controller:
+    hostname: control
+    image: justdan777/facc-control:0.0.1-SNAPSHOT
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://localhost:5432/db-facc
+      - SPRING_DATASOURCE_USERNAME=postgres
+      - SPRING_DATASOURCE_PASSWORD=root
+    restart: always
+
+  front:
+    hostname: front
+    build: ./facc-front
+    image: justdan777/facc-front
+    restart: always
+
+  nginx:
+    build:
+      context: ./nginx
+      args:
+        - CONFIG=prod/
+    image: justdan777/facc-nginx
+    container_name: facc-nginx
+    hostname: facc-nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    depends_on:
+      - auth
+      - controller
+      - front
+    restart: on-failure
