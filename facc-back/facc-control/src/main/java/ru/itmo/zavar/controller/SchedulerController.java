@@ -44,25 +44,50 @@ public class SchedulerController {
         }
     }
 
-    @PostMapping("/simulation")
-    public ResponseEntity<?> updateScheduleForSimulation(@Valid @RequestBody SimulationDTO.Request.SetSchedule setSchedule) {
+    @PostMapping("/simulation/schedule")
+    public ResponseEntity<?> addScheduleForSimulation(@Valid @RequestBody SimulationDTO.Request.AddSchedule addSchedule) {
         try {
-            if (setSchedule.getStartCronExpression() == null && setSchedule.getEndCronExpression() == null) {
-                schedulerService.removeSchedulerForSimulation();
-                return ResponseEntity.ok().build();
-            } else if (setSchedule.getStartCronExpression() != null && setSchedule.getEndCronExpression() != null) {
-                schedulerService.setSchedulerForSimulation(setSchedule.getStartCronExpression(), setSchedule.getEndCronExpression());
-                return ResponseEntity.ok().build();
-            } else {
-                throw new ResponseStatusException(HttpStatus.CONFLICT, "Both expressions should be null or not null at the same time");
-            }
+            schedulerService.addSchedulerForSimulation(addSchedule.getName(), addSchedule.getStartCronExpression(), addSchedule.getEndCronExpression());
+            return ResponseEntity.status(HttpStatus.CREATED).build();
         } catch (SchedulerException e) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
+        } catch (IllegalArgumentException e) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, e.getMessage());
         }
     }
 
-    @GetMapping("/simulation")
-    public ResponseEntity<SimulationDTO.Response.GetSimulationInfo> getSimulationScheduleInfo() {
+    @PutMapping("/simulation/schedule/{id}")
+    public ResponseEntity<?> updateScheduleForSimulation(@PathVariable @Positive @NotNull Long id, @Valid @RequestBody SimulationDTO.Request.UpdateSchedule updateSchedule) {
+        try {
+            schedulerService.updateSchedulerForSimulation(id, updateSchedule.getStartCronExpression(), updateSchedule.getEndCronExpression());
+            return ResponseEntity.ok().build();
+        } catch (SchedulerException e) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
+        } catch (NoSuchElementException e) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
+        }
+    }
+
+    @DeleteMapping("/simulation/schedule/{id}")
+    public ResponseEntity<?> addScheduleForSimulation(@PathVariable @Positive @NotNull Long id) {
+        try {
+            schedulerService.removeSchedulerForSimulation(id);
+            return ResponseEntity.ok().build();
+        } catch (SchedulerException e) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
+        } catch (NoSuchElementException e) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
+        }
+    }
+
+    @GetMapping("/simulation/schedule")
+    public ResponseEntity<List<SimulationDTO.Response.GetSimulationSchedule>> getAllScheduleForSimulation() {
+        List<SimulationDTO.Response.GetSimulationSchedule> allSimulationSchedule = schedulerService.getAllSimulationSchedule();
+        return ResponseEntity.ok(allSimulationSchedule);
+    }
+
+    @GetMapping("/simulation/state")
+    public ResponseEntity<SimulationDTO.Response.GetSimulationInfo> getSimulationInfo() {
         try {
             SimulationDTO.Response.GetSimulationInfo schedulerForSimulation = schedulerService.getSimulationInfo();
             return ResponseEntity.ok(schedulerForSimulation);
@@ -125,7 +150,7 @@ public class SchedulerController {
     public ResponseEntity<?> updateTimetableEntry(@Valid @RequestBody TimetableEntryDTO.Request.UpdateEntry entry,
                                                   @PathVariable @Positive @NotNull Long id) {
         try {
-            schedulerService.updateTimetableEntry(id, entry.getName(), entry.getCronExpression(), entry.getDescription());
+            schedulerService.updateTimetableEntry(id, entry.getName(), entry.getCronExpression(), entry.getDescription(), entry.getArguments());
         } catch (SchedulerException e) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
         } catch (NoSuchElementException e) {
