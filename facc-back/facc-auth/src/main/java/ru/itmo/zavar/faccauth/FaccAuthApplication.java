@@ -1,5 +1,6 @@
 package ru.itmo.zavar.faccauth;
 
+import com.google.common.io.Resources;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -15,7 +16,10 @@ import yandex.cloud.sdk.ServiceFactory;
 import yandex.cloud.sdk.auth.Auth;
 import yandex.cloud.sdk.auth.provider.CredentialProvider;
 
+import java.io.IOException;
 import java.net.URISyntaxException;
+import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Paths;
 import java.util.Locale;
 import java.util.Objects;
@@ -52,10 +56,11 @@ public class FaccAuthApplication {
     }
 
     @Bean
-    public ServiceFactory yandexCloudServiceFactory() throws URISyntaxException {
+    public ServiceFactory yandexCloudServiceFactory() throws URISyntaxException, IOException {
+        URL url = getClass().getResource(authKeyFile);
+        String content = Resources.toString(url, StandardCharsets.UTF_8);
         CredentialProvider credentialProvider =
-                Auth.apiKeyBuilder().fromFile(Paths.get(Objects.requireNonNull(CloudLoggingServiceImpl.class
-                                .getResource(authKeyFile)).toURI()))
+                Auth.apiKeyBuilder().fromJson(content)
                         .build();
 
         return ServiceFactory.builder()
