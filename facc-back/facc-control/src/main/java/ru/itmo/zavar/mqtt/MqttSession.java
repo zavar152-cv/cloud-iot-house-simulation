@@ -1,5 +1,6 @@
 package ru.itmo.zavar.mqtt;
 
+import com.google.common.io.Resources;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -8,6 +9,8 @@ import org.springframework.stereotype.Component;
 import ru.itmo.zavar.FaccControlApplication;
 import ru.itmo.zavar.service.CloudLoggingService;
 import yandex.cloud.api.logging.v1.LogEntryOuterClass;
+import yandex.cloud.sdk.auth.Auth;
+import yandex.cloud.sdk.auth.provider.CredentialProvider;
 
 import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.SSLContext;
@@ -17,6 +20,7 @@ import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
+import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Paths;
 import java.security.KeyStore;
@@ -67,14 +71,14 @@ public final class MqttSession implements MqttCallback {
     private CloudLoggingService cloudLoggingService;
 
     public MqttSession(String broker, String clientId, String objectId, CloudLoggingService cloudLoggingService) throws Exception {
-        File file = new File(Objects.requireNonNull(getClass().getResource("/ssl/" + objectId)).getFile());
-        String certsDir = file.getAbsolutePath();
+        //File file = new File(Objects.requireNonNull(getClass().getResource("/ssl/" + objectId + "/keystore.p12")).getFile());
+        //String certsDir = file.getAbsolutePath();
         this.clientId = clientId;
         this.cloudLoggingService = cloudLoggingService;
         client = new MqttClient(broker, clientId);
         client.setCallback(this);
         connOpts = new MqttConnectOptions();
-        connOpts.setSocketFactory(getSocketFactoryWithCerts(certsDir));
+        connOpts.setSocketFactory(getSocketFactoryWithCerts(getClass().getResource("/ssl/" + objectId + "/keystore.p12")));
         connOpts.setCleanSession(true);
         connOpts.setKeepAliveInterval(60);
         connOpts.setConnectionTimeout(60);
@@ -165,16 +169,16 @@ public final class MqttSession implements MqttCallback {
         return ctx.getSocketFactory();
     }
 
-    private SSLSocketFactory getSocketFactoryWithCerts(String certsDir)
+    private SSLSocketFactory getSocketFactoryWithCerts(URL certsDir)
             throws Exception {
         // Client key/cert:
         final char[] empty = "".toCharArray();
         KeyStore ks = KeyStore.getInstance("PKCS12");
         // To obtain |.p12| from |.pem|:
         // openssl pkcs12 -export -in cert.pem -inkey key.pem -out keystore.p12
-        ks.load(new FileInputStream(
-                        Paths.get(certsDir, "keystore.p12").toString()),
-                empty);
+        //URL stream = getClass().getResource(certsDir);
+        InputStream inputStream = certsDir.openStream();
+        ks.load(inputStream, empty);
         KeyManagerFactory kmf = KeyManagerFactory.getInstance("SunX509");
         kmf.init(ks, empty);
 
