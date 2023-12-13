@@ -14,7 +14,7 @@ public interface SchedulerService {
 
     void createTimetableEntryForGroup(String name, JobGroup group, String cronExpression, String description, Long actionId, List<String> arguments) throws SchedulerException, IllegalArgumentException, EntityNotFoundException;
 
-    void updateTimetableEntry(Long id, String name, String cronExpression, String description) throws NoSuchElementException, SchedulerException;
+    void updateTimetableEntry(Long id, String name, String cronExpression, String description, List<String> arguments) throws NoSuchElementException, SchedulerException;
 
     boolean deleteTimetableEntry(Long id) throws NoSuchElementException, SchedulerException;
 
@@ -32,9 +32,15 @@ public interface SchedulerService {
 
     void disableSimulation();
 
-    void setSchedulerForSimulation(String startCron, String endCron) throws SchedulerException;
+    void addSchedulerForSimulation(String name, String startCron, String endCron) throws SchedulerException, IllegalArgumentException;
 
-    void removeSchedulerForSimulation() throws SchedulerException;
+    void updateSchedulerForSimulation(Long id, String startCron, String endCron) throws SchedulerException, NoSuchElementException;
+
+    void removeSchedulerForSimulation(Long id) throws SchedulerException, NoSuchElementException;
+
+    List<SimulationDTO.Response.GetSimulationSchedule> getAllSimulationSchedule();
 
     SimulationDTO.Response.GetSimulationInfo getSimulationInfo() throws NoSuchElementException;
+
+    SimulationDTO.Response.GetSimulationSchedule getSimulationScheduleById(Long id) throws NoSuchElementException;
 }

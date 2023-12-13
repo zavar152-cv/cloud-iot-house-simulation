@@ -42,6 +42,7 @@ public class SchedulerServiceImpl implements SchedulerService {
     private final JobScheduleCreator scheduleCreator;
     private final StateRepository stateRepository;
     private final StatusRepository statusRepository;
+    private final SimulationTimetableRepository simulationTimetableRepository;
     @Value("${status.enabled}")
     private String enabledStatus;
     @Value("${status.disabled}")
@@ -61,23 +62,45 @@ public class SchedulerServiceImpl implements SchedulerService {
 
         if (optionalStateEntity.isEmpty()) {
             statusRepository.findById(2L).ifPresent(statusEntity -> {
-                stateRepository.save(new StateEntity(1L, statusEntity, null, null));
+                stateRepository.save(new StateEntity(1L, statusEntity));
             });
         } else {
             StateEntity stateEntity = optionalStateEntity.get();
             if (stateEntity.getSimulationStatus().getName().equals(disabledStatus)) {
                 disableSimulation();
             } else if (stateEntity.getSimulationStatus().getName().equals(enabledStatus)) {
-                if (stateEntity.getStartCronExpression() == null || stateEntity.getEndCronExpression() == null) {
+                if (simulationTimetableRepository.count() == 0) {
                     enableSimulation();
                 } else {
-                    setSchedulerForSimulation(stateEntity.getStartCronExpression(), stateEntity.getEndCronExpression());
+                    loadAllSimulationSchedule();
                     enableSimulation();
                 }
             }
         }
     }
 
+    private void loadAllSimulationSchedule() {
+        simulationTimetableRepository.findAll().forEach(entity -> {
+            Scheduler scheduler = schedulerFactoryBean.getScheduler();
+            JobDetail enableJobDetail = scheduleCreator.createJobForSimulation(SimulationJob.class, false, context,
+                    entity.getName() + enableSimulationJobName, simulationJobGroup, true);
+            JobDetail disableJobDetail = scheduleCreator.createJobForSimulation(SimulationJob.class, false, context,
+                    entity.getName() + disableSimulationJobName, simulationJobGroup, false);
+
+            Trigger enableTrigger = scheduleCreator.createCronTrigger(entity.getName() + enableSimulationJobName, new Date(),
+                    entity.getStartCronExpression(), SimpleTrigger.MISFIRE_INSTRUCTION_FIRE_NOW);
+            Trigger disableTrigger = scheduleCreator.createCronTrigger(entity.getName() + disableSimulationJobName, new Date(),
+                    entity.getEndCronExpression(), SimpleTrigger.MISFIRE_INSTRUCTION_FIRE_NOW);
+
+            try {
+                scheduler.scheduleJob(enableJobDetail, enableTrigger);
+                scheduler.scheduleJob(disableJobDetail, disableTrigger);
+                log.info("Scheduled simulation with start cron: {} and end cron {}", entity.getStartCronExpression(), entity.getEndCronExpression());
+            } catch (SchedulerException e) {
+                throw new RuntimeException(e);
+            }
+        });
+    }
 
     @Override
     public void createTimetableEntry(String name, JobGroup group, String cronExpression, String description, String deviceId, Long actionId, List<String> arguments) throws SchedulerException, IllegalArgumentException, EntityNotFoundException {
@@ -150,18 +173,34 @@ public class SchedulerServiceImpl implements SchedulerService {
     }
 
     @Override
-    public void updateTimetableEntry(Long id, String name, String cronExpression, String description) throws NoSuchElementException, SchedulerException {
+    public void updateTimetableEntry(Long id, String name, String cronExpression, String description, List<String> arguments) throws NoSuchElementException, SchedulerException {
         TimetableEntryEntity timetableEntryEntity = timetableEntryRepository.findById(id).orElseThrow();
 
-        Trigger newTrigger = scheduleCreator.createCronTrigger(name, new Date(),
-                cronExpression, SimpleTrigger.MISFIRE_INSTRUCTION_FIRE_NOW);
         try {
-            schedulerFactoryBean.getScheduler().rescheduleJob(TriggerKey.triggerKey(timetableEntryEntity.getName()), newTrigger);
+            schedulerFactoryBean.getScheduler().deleteJob(new JobKey(timetableEntryEntity.getName(),
+                    timetableEntryEntity.getJobGroup().name()));
             timetableEntryEntity.setName(name);
             timetableEntryEntity.setCronExpression(cronExpression);
             timetableEntryEntity.setDescription(description);
+            timetableEntryEntity.setArguments(arguments);
             timetableEntryRepository.save(timetableEntryEntity);
             log.info("job with id {} updated", timetableEntryEntity.getId());
+
+            Class<? extends QuartzJobBean> jobClass = getClassByGroup(timetableEntryEntity.getJobGroup());
+
+            JobDetail jobDetail = scheduleCreator.createJobForDevice(jobClass, false, context, name, timetableEntryEntity.getJobGroup().name(), timetableEntryEntity.getDevice().getId(), timetableEntryEntity.getId());
+
+            jobDetail.getJobDataMap().put("arguments", timetableEntryEntity.getArguments());
+            jobDetail.getJobDataMap().put("action", timetableEntryEntity.getAction().getId());
+
+            Trigger trigger = scheduleCreator.createCronTrigger(name, new Date(),
+                    cronExpression, SimpleTrigger.MISFIRE_INSTRUCTION_FIRE_NOW);
+            if (simulationEnabled) {
+                Scheduler scheduler = schedulerFactoryBean.getScheduler();
+                scheduler.scheduleJob(jobDetail, trigger);
+                log.info("job {} with id {} scheduled", timetableEntryEntity.getName(), timetableEntryEntity.getId());
+            }
+
         } catch (SchedulerException e) {
             log.error(e.getMessage(), e);
             throw e;
@@ -323,54 +362,80 @@ public class SchedulerServiceImpl implements SchedulerService {
     }
 
     @Override
-    public void setSchedulerForSimulation(String startCron, String endCron) throws SchedulerException {
-        try {
-            removeSchedulerForSimulation();
-        } catch (SchedulerException e) {
-            log.warn("Simulation schedule was null");
-        }
+    public void addSchedulerForSimulation(String name, String startCron, String endCron) throws SchedulerException, IllegalArgumentException {
+
+        simulationTimetableRepository.save(SimulationTimetableEntity.builder()
+                .startCronExpression(startCron)
+                .endCronExpression(endCron)
+                .name(name).build());
 
         Scheduler scheduler = schedulerFactoryBean.getScheduler();
-        JobDetail enableJobDetail = scheduleCreator.createJobForSimulation(SimulationJob.class, false, context,
-                enableSimulationJobName, simulationJobGroup, true);
-        JobDetail disableJobDetail = scheduleCreator.createJobForSimulation(SimulationJob.class, false, context,
-                disableSimulationJobName, simulationJobGroup, false);
 
-        Trigger enableTrigger = scheduleCreator.createCronTrigger(enableSimulationJobName, new Date(),
-                startCron, SimpleTrigger.MISFIRE_INSTRUCTION_FIRE_NOW);
-        Trigger disableTrigger = scheduleCreator.createCronTrigger(disableSimulationJobName, new Date(),
-                endCron, SimpleTrigger.MISFIRE_INSTRUCTION_FIRE_NOW);
+        JobDetail jobDetailEnable = JobBuilder
+                .newJob(SimulationJob.class)
+                .withIdentity(name, name + enableSimulationJobName).build();
+        JobDetail jobDetailDisable = JobBuilder
+                .newJob(SimulationJob.class)
+                .withIdentity(name, name + disableSimulationJobName).build();
+        if (!scheduler.checkExists(jobDetailEnable.getKey()) && !scheduler.checkExists(jobDetailDisable.getKey())) {
+            JobDetail enableJobDetail = scheduleCreator.createJobForSimulation(SimulationJob.class, false, context,
+                    name + enableSimulationJobName, simulationJobGroup, true);
+            JobDetail disableJobDetail = scheduleCreator.createJobForSimulation(SimulationJob.class, false, context,
+                    name + disableSimulationJobName, simulationJobGroup, false);
 
-        scheduler.scheduleJob(enableJobDetail, enableTrigger);
-        scheduler.scheduleJob(disableJobDetail, disableTrigger);
+            Trigger enableTrigger = scheduleCreator.createCronTrigger(name + enableSimulationJobName, new Date(),
+                    startCron, SimpleTrigger.MISFIRE_INSTRUCTION_FIRE_NOW);
+            Trigger disableTrigger = scheduleCreator.createCronTrigger(name + disableSimulationJobName, new Date(),
+                    endCron, SimpleTrigger.MISFIRE_INSTRUCTION_FIRE_NOW);
 
-        stateRepository.findById(1L).ifPresent(stateEntity -> {
-            stateEntity.setStartCronExpression(startCron);
-            stateEntity.setEndCronExpression(endCron);
-            stateRepository.save(stateEntity);
-        });
-        log.info("Scheduled simulation with start cron: {} and end cron {}", startCron, endCron);
+            scheduler.scheduleJob(enableJobDetail, enableTrigger);
+            scheduler.scheduleJob(disableJobDetail, disableTrigger);
+
+            log.info("Scheduled simulation with start cron: {} and end cron {}", startCron, endCron);
+        } else {
+            throw new IllegalArgumentException("Job is already exists");
+        }
     }
 
     @Override
-    public void removeSchedulerForSimulation() throws SchedulerException {
-        disableSimulation();
+    public void updateSchedulerForSimulation(Long id, String startCron, String endCron) throws SchedulerException, NoSuchElementException {
+        SimulationTimetableEntity simulationTimetableEntity = simulationTimetableRepository.findById(id).orElseThrow();
+        String name = simulationTimetableEntity.getName();
+        removeSchedulerForSimulation(id);
+        addSchedulerForSimulation(name, startCron, endCron);
+    }
 
-        schedulerFactoryBean.getScheduler().deleteJob(new JobKey(enableSimulationJobName, simulationJobGroup));
-        schedulerFactoryBean.getScheduler().deleteJob(new JobKey(disableSimulationJobName, simulationJobGroup));
+    @Override
+    public void removeSchedulerForSimulation(Long id) throws SchedulerException, NoSuchElementException {
+        SimulationTimetableEntity simulationTimetableEntity = simulationTimetableRepository.findById(id).orElseThrow();
 
-        stateRepository.findById(1L).ifPresent(stateEntity -> {
-            stateEntity.setStartCronExpression(null);
-            stateEntity.setEndCronExpression(null);
-            stateRepository.save(stateEntity);
-        });
+        schedulerFactoryBean.getScheduler().deleteJob(new JobKey(simulationTimetableEntity.getName() + enableSimulationJobName, simulationJobGroup));
+        schedulerFactoryBean.getScheduler().deleteJob(new JobKey(simulationTimetableEntity.getName() + disableSimulationJobName, simulationJobGroup));
+
+        simulationTimetableRepository.deleteById(id);
         log.info("Removed simulation schedule");
+    }
+
+    @Override
+    public List<SimulationDTO.Response.GetSimulationSchedule> getAllSimulationSchedule() {
+        Iterable<SimulationTimetableEntity> iterable = simulationTimetableRepository.findAll();
+        List<SimulationDTO.Response.GetSimulationSchedule> all = new ArrayList<>();
+        iterable.forEach(entity -> {
+            all.add(new SimulationDTO.Response.GetSimulationSchedule(entity.getId(), entity.getName(), entity.getStartCronExpression(), entity.getEndCronExpression()));
+        });
+        return all;
+    }
+
+    @Override
+    public SimulationDTO.Response.GetSimulationSchedule getSimulationScheduleById(Long id) throws NoSuchElementException {
+        SimulationTimetableEntity entity = simulationTimetableRepository.findById(id).orElseThrow();
+        return new SimulationDTO.Response.GetSimulationSchedule(entity.getId(), entity.getName(), entity.getStartCronExpression(), entity.getEndCronExpression());
     }
 
     @Override
     public SimulationDTO.Response.GetSimulationInfo getSimulationInfo() throws NoSuchElementException {
         StateEntity stateEntity = stateRepository.findById(1L).orElseThrow();
-        return new SimulationDTO.Response.GetSimulationInfo(stateEntity.getSimulationStatus().getName(), stateEntity.getStartCronExpression(), stateEntity.getEndCronExpression());
+        return new SimulationDTO.Response.GetSimulationInfo(stateEntity.getSimulationStatus().getName());
     }
 
     @DisallowConcurrentExecution
