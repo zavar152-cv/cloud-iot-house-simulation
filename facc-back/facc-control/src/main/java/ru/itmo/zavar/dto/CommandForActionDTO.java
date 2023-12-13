@@ -8,8 +8,25 @@ import lombok.Value;
 public enum CommandForActionDTO {
     ;
 
-    private interface Command {
+    private interface Id {
         @NotNull
+        @Positive
+        Long getId();
+    }
+
+    private interface FileName {
+        @NotBlank
+        String getFileName();
+    }
+
+    private interface FileId {
+        @NotNull
+        @Positive
+        Long getFileId();
+    }
+
+    private interface Command {
+        @NotBlank
         String getCommand();
     }
 
@@ -33,10 +50,13 @@ public enum CommandForActionDTO {
         ;
 
         @Value
-        public static class CommandForAction implements Command, ActionId, ActionName {
+        public static class CommandForAction implements Id, Command, ActionId, ActionName, FileId, FileName {
+            Long id;
             String command;
             Long actionId;
             String actionName;
+            Long fileId;
+            String fileName;
         }
     }
 

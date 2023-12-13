@@ -32,16 +32,16 @@ public class CommandForActionServiceImpl implements CommandForActionService {
     public List<CommandForActionDTO.Response.CommandForAction> getAllCommandsForActions() {
         Iterable<CommandForActionEntity> iterable = commandForActionRepository.findAll();
         List<CommandForActionDTO.Response.CommandForAction> all = new ArrayList<>();
-        iterable.forEach(entity -> all.add(new CommandForActionDTO.Response.CommandForAction(entity.getCommand(),
-                entity.getAction().getId(), entity.getAction().getAction())));
+        iterable.forEach(entity -> all.add(new CommandForActionDTO.Response.CommandForAction(entity.getId(), entity.getCommand(),
+                entity.getAction().getId(), entity.getAction().getAction(), entity.getFile().getId(), entity.getFile().getName())));
         return all;
     }
 
     @Override
     public CommandForActionDTO.Response.CommandForAction getCommandForAction(Long id) throws NoSuchElementException {
         CommandForActionEntity entity = commandForActionRepository.findById(id).orElseThrow();
-        return new CommandForActionDTO.Response.CommandForAction(entity.getCommand(),
-                entity.getAction().getId(), entity.getAction().getAction());
+        return new CommandForActionDTO.Response.CommandForAction(entity.getId(), entity.getCommand(),
+                entity.getAction().getId(), entity.getAction().getAction(), entity.getFile().getId(), entity.getFile().getName());
     }
 
     @Override
