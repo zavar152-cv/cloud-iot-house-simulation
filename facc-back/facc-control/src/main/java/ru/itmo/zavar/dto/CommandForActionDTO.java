@@ -15,12 +15,10 @@ public enum CommandForActionDTO {
     }
 
     private interface FileName {
-        @NotBlank
         String getFileName();
     }
 
     private interface FileId {
-        @NotNull
         @Positive
         Long getFileId();
     }

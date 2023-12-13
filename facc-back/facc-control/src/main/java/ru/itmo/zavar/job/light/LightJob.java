@@ -100,9 +100,9 @@ public class LightJob extends QuartzJobBean {
     private void sendToDevice(String deviceId, String action, List<String> arguments) {
         log.info("Sending to device...");
         try {
-            MqttSession mqttSession = new MqttSession(mqttBrokerUrl, getClass().getName(), deviceId);
+            MqttSession mqttSession = new MqttSession(mqttBrokerUrl, getClass().getName(), mqttRegistryId);
             mqttSession.start();
-            mqttSession.publish("$devices/" + deviceId + "/events", action + " " + String.join(",", arguments));
+            mqttSession.publish("$devices/" + deviceId + "/commands", action + " " + String.join(",", arguments));
             mqttSession.stop();
         } catch (Exception e) {
             throw new RuntimeException(e);
