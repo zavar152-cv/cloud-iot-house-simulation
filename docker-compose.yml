@@ -1,66 +1,53 @@
 version: '3.9'
 
 services:
-  postgres:
-    hostname: postgres
-    image: postgres:latest
-    environment:
-      POSTGRES_DB: db-facc
-      POSTGRES_USER: user_db
-      POSTGRES_PASSWORD: highload
-      PGDATA: /var/lib/postgresql/data/pgdata
-    volumes:
-      - ../2. Init Database:/docker-entrypoint-initdb.d
-    ports:
-      - "5432:5432"
-
   auth:
     ports:
       - "25565:25565"
     hostname: auth
     image: justdan777/facc-auth:0.0.1-SNAPSHOT
     environment:
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/db-facc
-      - SPRING_DATASOURCE_USERNAME=user_db
-      - SPRING_DATASOURCE_PASSWORD=highload
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://rc1a-jrejwwga94ggebsz.mdb.yandexcloud.net:6432/db-facc?targetServerType=master
+      - SPRING_DATASOURCE_USERNAME=db-user
+      - SPRING_DATASOURCE_PASSWORD=facc-db-user
     restart: always
     depends_on:
       - postgres
 
-  controller:
-    hostname: control
-    image: justdan777/facc-control:0.0.1-SNAPSHOT
-    environment:
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/db-facc
-      - SPRING_DATASOURCE_USERNAME=user_db
-      - SPRING_DATASOURCE_PASSWORD=highload
-    restart: always
-    depends_on:
-      - postgres
-
-  front:
-    hostname: front
-    build: ./facc-front
-    environment:
-      - NODE_ENV=production
-    ports:
-      - "3000:3000"
-    image: justdan777/facc-front
-    restart: always
-
-  nginx:
-    build:
-      context: ./nginx
-      args:
-        - CONFIG=prod/
-    image: justdan777/facc-nginx
-    container_name: facc-nginx
-    hostname: facc-nginx
-    ports:
-      - "80:80"
-      - "443:443"
-    depends_on:
-      - auth
+#  controller:
+#    hostname: control
+#    image: justdan777/facc-control:0.0.1-SNAPSHOT
+#    environment:
+#      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/db-facc
+#      - SPRING_DATASOURCE_USERNAME=user_db
+#      - SPRING_DATASOURCE_PASSWORD=highload
+#    restart: always
+#    depends_on:
+#      - postgres
+#
+#  front:
+#    hostname: front
+#    build: ./facc-front
+#    environment:
+#      - NODE_ENV=production
+#    ports:
+#      - "3000:3000"
+#    image: justdan777/facc-front
+#    restart: always
+#
+#  nginx:
+#    build:
+#      context: ./nginx
+#      args:
+#        - CONFIG=prod/
+#    image: justdan777/facc-nginx
+#    container_name: facc-nginx
+#    hostname: facc-nginx
+#    ports:
+#      - "80:80"
+#      - "443:443"
+#    depends_on:
+#      - auth
 #      - controller
-      - front
-    restart: on-failure
+#      - front
+#    restart: on-failure
