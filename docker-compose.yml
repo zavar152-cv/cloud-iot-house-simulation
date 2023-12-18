@@ -2,6 +2,8 @@ version: '3.9'
 
 services:
   auth:
+    ports:
+      - "25565:25565"
     hostname: auth
     image: justdan777/facc-auth:0.0.1-SNAPSHOT
     environment:
