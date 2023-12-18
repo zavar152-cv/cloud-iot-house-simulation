@@ -59,6 +59,7 @@ export let generateCronExpression = (timetableRow) => {
 export let generateTimeSlot = (expressionFrom, expressionTo) => {
   let on = expressionFrom.split(' ');
   let off = expressionTo === undefined ? null : expressionTo.split(' ');
+  console.log(getDayOfWeekNameReverse(on[5]))
   return {
     dayOfWeek: getDayOfWeekNameReverse(on[5]),
     from: on[2] + ":" + on[1],
