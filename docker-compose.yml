@@ -1,23 +1,13 @@
 version: '3.9'
 
 services:
-  postgres:
-    hostname: postgres
-    image: postgres:latest
-    environment:
-      POSTGRES_DB: db-facc
-      POSTGRES_USER: db-user
-      POSTGRES_PASSWORD: facc-db-user
-      PGDATA: /var/lib/postgresql/data/pgdata
-    ports:
-      - "5432:5432"
   auth:
     ports:
       - "25565:25565"
     hostname: auth
     image: justdan777/facc-auth:0.0.1-SNAPSHOT
     environment:
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/db-facc
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://rc1a-jrejwwga94ggebsz.mdb.yandexcloud.net:6432/db-facc?targetServerType=master
       - SPRING_DATASOURCE_USERNAME=db-user
       - SPRING_DATASOURCE_PASSWORD=facc-db-user
     restart: always
