@@ -34,8 +34,10 @@ public class CloudLoggingServiceImpl implements CloudLoggingService {
 
     @PostConstruct
     public void init() {
+        log.info("Creating logIngestionServiceBlockingStub");
         logIngestionServiceBlockingStub = serviceFactory.create(LogIngestionServiceGrpc.LogIngestionServiceBlockingStub.class,
                 LogIngestionServiceGrpc::newBlockingStub);
+        log.info("Created logIngestionServiceBlockingStub");
     }
 
     @Override
@@ -55,6 +57,7 @@ public class CloudLoggingServiceImpl implements CloudLoggingService {
                                 .setNanos(now.getNano()))
                         .build())
                 .build();
+        log.info("Write log");
         if(cloudLoggingEnable)
             return logIngestionServiceBlockingStub.write(writeRequest);
         else

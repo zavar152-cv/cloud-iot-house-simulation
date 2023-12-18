@@ -41,4 +41,4 @@ yandex:
   auth-key-file: /authorized_key.json
   log-group-id: e23jts8dhh9aolg1at3p
   cloud-logging-enable: true
-  compute-engine: true
+  compute-engine: false
