@@ -11,8 +11,6 @@ services:
       - SPRING_DATASOURCE_USERNAME=db-user
       - SPRING_DATASOURCE_PASSWORD=facc-db-user
     restart: always
-    depends_on:
-      - postgres
 
 #  controller:
 #    hostname: control
