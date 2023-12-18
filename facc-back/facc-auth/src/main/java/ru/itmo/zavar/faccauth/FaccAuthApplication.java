@@ -72,7 +72,6 @@ public class FaccAuthApplication {
             credentialProvider = Auth.apiKeyBuilder().fromJson(content)
                     .build();
         }
-        log.info("yandexCloudServiceFactory is building");
         return ServiceFactory.builder()
                 .credentialProvider(credentialProvider)
                 .build();
