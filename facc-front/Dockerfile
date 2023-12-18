@@ -1,7 +1,5 @@
 FROM node:latest
 
-RUN apt-get -y update
-
 WORKDIR /front
 COPY . .
 RUN npm i uuid && npm install
