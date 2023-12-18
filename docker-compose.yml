@@ -12,40 +12,40 @@ services:
       - SPRING_DATASOURCE_PASSWORD=facc-db-user
     restart: always
 
-#  controller:
-#    hostname: control
-#    image: justdan777/facc-control:0.0.1-SNAPSHOT
-#    environment:
-#      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/db-facc
-#      - SPRING_DATASOURCE_USERNAME=user_db
-#      - SPRING_DATASOURCE_PASSWORD=highload
-#    restart: always
-#    depends_on:
-#      - postgres
-#
-#  front:
-#    hostname: front
-#    build: ./facc-front
-#    environment:
-#      - NODE_ENV=production
-#    ports:
-#      - "3000:3000"
-#    image: justdan777/facc-front
-#    restart: always
-#
-#  nginx:
-#    build:
-#      context: ./nginx
-#      args:
-#        - CONFIG=prod/
-#    image: justdan777/facc-nginx
-#    container_name: facc-nginx
-#    hostname: facc-nginx
-#    ports:
-#      - "80:80"
-#      - "443:443"
-#    depends_on:
-#      - auth
-#      - controller
-#      - front
-#    restart: on-failure
+  controller:
+    hostname: control
+    image: justdan777/facc-control:0.0.1-SNAPSHOT
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://rc1a-jrejwwga94ggebsz.mdb.yandexcloud.net:6432/db-facc?targetServerType=master&ssl=true&sslmode=verify-full
+      - SPRING_DATASOURCE_USERNAME=db-user
+      - SPRING_DATASOURCE_PASSWORD=facc-db-user
+    restart: always
+    depends_on:
+      - postgres
+
+  front:
+    hostname: front
+    build: ./facc-front
+    environment:
+      - NODE_ENV=production
+    ports:
+      - "3000:3000"
+    image: justdan777/facc-front
+    restart: always
+
+  nginx:
+    build:
+      context: ./nginx
+      args:
+        - CONFIG=prod/
+    image: justdan777/facc-nginx
+    container_name: facc-nginx
+    hostname: facc-nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    depends_on:
+      - auth
+      - controller
+      - front
+    restart: on-failure
