@@ -22,9 +22,9 @@ spring:
     hibernate:
       ddl-auto: update
   datasource:
-    username: ${SPRING_DATASOURCE_USERNAME}
-    password: ${SPRING_DATASOURCE_PASSWORD}
-    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql}
+    username: ${SPRING_DATASOURCE_USERNAME:user_db}
+    password: ${SPRING_DATASOURCE_PASSWORD:facc}
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/db-facc}
     driver-class-name: org.postgresql.Driver
   mvc:
     log-resolved-exception: true
@@ -40,4 +40,4 @@ admin:
 yandex:
   auth-key-file: /authorized_key.json
   log-group-id: e23jts8dhh9aolg1at3p
-
+  cloud-logging-enable: false
