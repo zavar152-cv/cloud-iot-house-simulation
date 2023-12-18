@@ -64,10 +64,10 @@ public class FaccAuthApplication {
         String content = Resources.toString(url, StandardCharsets.UTF_8);
         CredentialProvider credentialProvider;
         if (computeEngine) {
-            credentialProvider = Auth.apiKeyBuilder().fromJson(content)
+            credentialProvider = Auth.computeEngineBuilder()
                     .build();
         } else {
-            credentialProvider = Auth.computeEngineBuilder()
+            credentialProvider = Auth.apiKeyBuilder().fromJson(content)
                     .build();
         }
 
