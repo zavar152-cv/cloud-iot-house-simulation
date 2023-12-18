@@ -1,6 +1,7 @@
 package ru.itmo.zavar.faccauth;
 
 import com.google.common.io.Resources;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -25,6 +26,7 @@ import java.util.Locale;
 import java.util.Objects;
 
 @SpringBootApplication
+@Slf4j
 public class FaccAuthApplication {
 
     @Value("${yandex.auth-key-file}")
@@ -70,7 +72,7 @@ public class FaccAuthApplication {
             credentialProvider = Auth.apiKeyBuilder().fromJson(content)
                     .build();
         }
-
+        log.info("yandexCloudServiceFactory is building");
         return ServiceFactory.builder()
                 .credentialProvider(credentialProvider)
                 .build();
