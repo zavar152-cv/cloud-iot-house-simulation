@@ -40,6 +40,9 @@ public class FaccControlApplication {
     @Value("${yandex.speech-kit.stt.port}")
     private int sttPort;
 
+    @Value("${yandex.compute-engine}")
+    private boolean computeEngine;
+
     public static void main(String[] args) {
         SpringApplication.run(FaccControlApplication.class, args);
     }
@@ -48,9 +51,14 @@ public class FaccControlApplication {
     public ServiceFactory yandexCloudServiceFactory() throws URISyntaxException, IOException {
         URL url = getClass().getResource(authKeyFile);
         String content = Resources.toString(url, StandardCharsets.UTF_8);
-        CredentialProvider credentialProvider =
-                Auth.apiKeyBuilder().fromJson(content)
-                        .build();
+        CredentialProvider credentialProvider;
+        if (computeEngine) {
+            credentialProvider = Auth.apiKeyBuilder().fromJson(content)
+                    .build();
+        } else {
+            credentialProvider = Auth.computeEngineBuilder()
+                    .build();
+        }
 
         return ServiceFactory.builder()
                 .credentialProvider(credentialProvider)
