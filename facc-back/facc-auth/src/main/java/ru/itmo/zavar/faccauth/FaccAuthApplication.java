@@ -30,6 +30,9 @@ public class FaccAuthApplication {
     @Value("${yandex.auth-key-file}")
     private String authKeyFile;
 
+    @Value("${yandex.compute-engine}")
+    private boolean computeEngine;
+
     public static void main(String[] args) {
         SpringApplication.run(FaccAuthApplication.class, args);
     }
@@ -59,9 +62,14 @@ public class FaccAuthApplication {
     public ServiceFactory yandexCloudServiceFactory() throws URISyntaxException, IOException {
         URL url = getClass().getResource(authKeyFile);
         String content = Resources.toString(url, StandardCharsets.UTF_8);
-        CredentialProvider credentialProvider =
-                Auth.apiKeyBuilder().fromJson(content)
-                        .build();
+        CredentialProvider credentialProvider;
+        if (computeEngine) {
+            credentialProvider = Auth.apiKeyBuilder().fromJson(content)
+                    .build();
+        } else {
+            credentialProvider = Auth.computeEngineBuilder()
+                    .build();
+        }
 
         return ServiceFactory.builder()
                 .credentialProvider(credentialProvider)
