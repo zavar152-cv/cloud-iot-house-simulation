@@ -48,10 +48,10 @@ const getDayOfWeekNameReverse = (dayOfWeekNumber) => {
 
 export let generateCronExpression = (timetableRow) => {
   return [
-    '? ' + timetableRow.from.split(':')[1] + ' ' +
+    '0 ' + timetableRow.from.split(':')[1] + ' ' +
     timetableRow.from.split(':')[0] + ' ? * ' +
     getDayOfWeekName(timetableRow.dayOfWeek),
-    timetableRow.to !== undefined ? '? ' + timetableRow.to.split(':')[1] + ' ' + timetableRow.to.split(':')[0] +
+    timetableRow.to !== undefined ? '0 ' + timetableRow.to.split(':')[1] + ' ' + timetableRow.to.split(':')[0] +
     ' ? * ' + getDayOfWeekName(timetableRow.dayOfWeek) : null,
   ];
 };
@@ -59,7 +59,6 @@ export let generateCronExpression = (timetableRow) => {
 export let generateTimeSlot = (expressionFrom, expressionTo) => {
   let on = expressionFrom.split(' ');
   let off = expressionTo === undefined ? null : expressionTo.split(' ');
-  console.log(getDayOfWeekNameReverse(on[5]))
   return {
     dayOfWeek: getDayOfWeekNameReverse(on[5]),
     from: on[2] + ":" + on[1],
