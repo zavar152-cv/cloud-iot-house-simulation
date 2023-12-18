@@ -24,10 +24,10 @@ const getDayOfWeekName = (dayOfWeekNumber) => {
 };
 export let generateCronExpression = (timetableRow) => {
   return [
-    '* ' + timetableRow.from.split(':')[1] + ' ' +
+    '? ' + timetableRow.from.split(':')[1] + ' ' +
     timetableRow.from.split(':')[0] + ' ? * ' +
     getDayOfWeekName(timetableRow.dayOfWeek),
-    timetableRow.to !== undefined ? '* ' + timetableRow.to.split(':')[1] + ' ' + timetableRow.to.split(':')[0] +
+    timetableRow.to !== undefined ? '? ' + timetableRow.to.split(':')[1] + ' ' + timetableRow.to.split(':')[0] +
     ' ? * ' + getDayOfWeekName(timetableRow.dayOfWeek) : null,
   ];
 };
@@ -36,7 +36,7 @@ export let generateTimeSlot = (expressionFrom, expressionTo) => {
   let on = expressionFrom.split(' ');
   let off = expressionTo === undefined ? null : expressionTo.split(' ');
   return {
-    dayOfWeek: on[5] - 1,
+    dayOfWeek: on[5] - 2 >= 0 ? on[5] - 2 : 7,
     from: on[2] + ":" + on[1],
     to: expressionTo === undefined ? null : off[2] + ":" + off[1]
   };
