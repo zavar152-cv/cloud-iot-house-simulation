@@ -29,6 +29,9 @@ public class CloudLoggingServiceImpl implements CloudLoggingService {
     private String logGroupId;
     private LogIngestionServiceGrpc.LogIngestionServiceBlockingStub logIngestionServiceBlockingStub;
 
+    @Value("${yandex.cloud-logging-enable}")
+    private boolean cloudLoggingEnable;
+
     @PostConstruct
     public void init() {
         logIngestionServiceBlockingStub = serviceFactory.create(LogIngestionServiceGrpc.LogIngestionServiceBlockingStub.class,
@@ -52,7 +55,10 @@ public class CloudLoggingServiceImpl implements CloudLoggingService {
                                 .setNanos(now.getNano()))
                         .build())
                 .build();
-        return logIngestionServiceBlockingStub.write(writeRequest);
+        if(cloudLoggingEnable)
+            return logIngestionServiceBlockingStub.write(writeRequest);
+        else
+            return null;
     }
 
     @Override
