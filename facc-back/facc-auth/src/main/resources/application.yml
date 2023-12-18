@@ -40,3 +40,6 @@ admin:
 yandex:
   auth-key-file: /authorized_key.json
   log-group-id: e23jts8dhh9aolg1at3p
+logging:
+  level:
+    root: trace
