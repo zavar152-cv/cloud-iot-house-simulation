@@ -39,6 +39,9 @@ admin:
   password: admin
 yandex:
   auth-key-file: /authorized_key.json
-  log-group-id: e23jts8dhh9aolg1at3p
-  cloud-logging-enable: false
-  compute-engine: false
+  logging:
+    enable: true
+    host: ingester.logging.yandexcloud.net
+    port: 443
+    log-group-id: e23jts8dhh9aolg1at3p
+    iam-key: t1.9euelZrMkcmenImZz8vMkcedk8uaju3rnpWalJuYmpKYz4nNl5yLk5uakszl8_dgMHhT-e9sX1VF_t3z9yBfdVP572xfVUX-zef1656Vms2Rl4uYicaKmpSJl5XOi4uJ7_zN5_XrnpWamZ2NkszPi8qQi5TOnI6Uipjv_cXrnpWazZGXi5iJxoqalImXlc6Li4k.9_4xqe8NYz09vP6Cv72tdUs8Ca-k_S_ACMPtvr9IQTGloBSJ9xrG7ttd5z-fz08pZ6fh49Fll2kaF5KxPtC3DA

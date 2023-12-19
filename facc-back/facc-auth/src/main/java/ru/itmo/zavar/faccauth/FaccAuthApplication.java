@@ -29,12 +29,6 @@ import java.util.Objects;
 @Slf4j
 public class FaccAuthApplication {
 
-    @Value("${yandex.auth-key-file}")
-    private String authKeyFile;
-
-    @Value("${yandex.compute-engine}")
-    private boolean computeEngine;
-
     public static void main(String[] args) {
         SpringApplication.run(FaccAuthApplication.class, args);
     }
@@ -58,22 +52,5 @@ public class FaccAuthApplication {
         SessionLocaleResolver slr = new SessionLocaleResolver();
         slr.setDefaultLocale(Locale.ENGLISH);
         return slr;
-    }
-
-    @Bean
-    public ServiceFactory yandexCloudServiceFactory() throws URISyntaxException, IOException {
-        URL url = getClass().getResource(authKeyFile);
-        String content = Resources.toString(url, StandardCharsets.UTF_8);
-        CredentialProvider credentialProvider;
-        if (computeEngine) {
-            credentialProvider = Auth.computeEngineBuilder()
-                    .build();
-        } else {
-            credentialProvider = Auth.apiKeyBuilder().fromJson(content)
-                    .build();
-        }
-        return ServiceFactory.builder()
-                .credentialProvider(credentialProvider)
-                .build();
     }
 }

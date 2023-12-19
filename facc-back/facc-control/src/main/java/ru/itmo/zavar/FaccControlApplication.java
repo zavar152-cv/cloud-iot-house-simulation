@@ -1,6 +1,5 @@
 package ru.itmo.zavar;
 
-import com.google.common.io.Resources;
 import io.grpc.ManagedChannelBuilder;
 import io.grpc.Metadata;
 import io.grpc.stub.MetadataUtils;
@@ -8,27 +7,13 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
-import ru.itmo.zavar.service.impl.CloudLoggingServiceImpl;
 import yandex.cloud.api.ai.stt.v3.RecognizerGrpc;
 import yandex.cloud.api.ai.tts.v3.SynthesizerGrpc;
-import yandex.cloud.sdk.ServiceFactory;
-import yandex.cloud.sdk.auth.Auth;
-import yandex.cloud.sdk.auth.provider.CredentialProvider;
 
-import java.io.File;
-import java.io.IOException;
-import java.net.URISyntaxException;
-import java.net.URL;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Paths;
-import java.util.Objects;
 import java.util.UUID;
 
 @SpringBootApplication
 public class FaccControlApplication {
-
-    @Value("${yandex.auth-key-file}")
-    private String authKeyFile;
     @Value("${yandex.speech-kit.api-key}")
     private String speechKitApiKey;
     @Value("${yandex.speech-kit.tts.host}")
@@ -40,29 +25,8 @@ public class FaccControlApplication {
     @Value("${yandex.speech-kit.stt.port}")
     private int sttPort;
 
-    @Value("${yandex.compute-engine}")
-    private boolean computeEngine;
-
     public static void main(String[] args) {
         SpringApplication.run(FaccControlApplication.class, args);
-    }
-
-    @Bean
-    public ServiceFactory yandexCloudServiceFactory() throws URISyntaxException, IOException {
-        URL url = getClass().getResource(authKeyFile);
-        String content = Resources.toString(url, StandardCharsets.UTF_8);
-        CredentialProvider credentialProvider;
-        if (computeEngine) {
-            credentialProvider = Auth.computeEngineBuilder()
-                    .build();
-        } else {
-            credentialProvider = Auth.apiKeyBuilder().fromJson(content)
-                    .build();
-        }
-
-        return ServiceFactory.builder()
-                .credentialProvider(credentialProvider)
-                .build();
     }
 
     @Bean
