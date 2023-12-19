@@ -196,7 +196,7 @@ public class AuthenticationController {
         } catch (UsernameNotFoundException exception) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, exception.getMessage());
         } catch (JwtException exception) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, exception.getMessage());
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, exception.getMessage());
         }
     }
 }
