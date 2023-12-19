@@ -10,6 +10,7 @@ services:
       - SPRING_DATASOURCE_URL=jdbc:postgresql://rc1a-jrejwwga94ggebsz.mdb.yandexcloud.net:6432/db-facc?targetServerType=master&ssl=true&sslmode=verify-full
       - SPRING_DATASOURCE_USERNAME=db-user
       - SPRING_DATASOURCE_PASSWORD=facc-db-user
+      - SPRING_CLOUD_LOGGING_ENABLE=true
     restart: always
 
   controller:
@@ -19,6 +20,7 @@ services:
       - SPRING_DATASOURCE_URL=jdbc:postgresql://rc1a-jrejwwga94ggebsz.mdb.yandexcloud.net:6432/db-facc
       - SPRING_DATASOURCE_USERNAME=db-user
       - SPRING_DATASOURCE_PASSWORD=facc-db-user
+      - SPRING_CLOUD_LOGGING_ENABLE=true
     restart: always
 
   front:

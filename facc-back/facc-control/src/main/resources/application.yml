@@ -40,7 +40,7 @@ status:
 yandex:
   auth-key-file: /authorized_key.json
   log-group-id: e232s1431gbklopopjth
-  cloud-logging-enable: false
+  cloud-logging-enable: ${SPRING_CLOUD_LOGGING_ENABLE:true}
   compute-engine: false
   mqtt:
     broker-url: ssl://mqtt.cloud.yandex.net:8883
