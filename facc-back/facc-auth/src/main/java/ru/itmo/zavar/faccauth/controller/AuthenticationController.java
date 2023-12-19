@@ -14,6 +14,7 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -194,7 +195,7 @@ public class AuthenticationController {
             log.info("User has valid token {} and got details", jwt);
             cloudLoggingService.log(LogEntryOuterClass.LogLevel.Level.INFO, "AuthenticationService",
                     "User has valid token {} and got details", jwt);
-            return ResponseEntity.ok(userDetailsByToken);
+            return ResponseEntity.status(HttpStatus.OK).header("X_isAdmin", String.valueOf(userDetailsByToken.getRoles().contains(RoleConstants.ADMIN))).body(userDetailsByToken);
         } catch (UsernameNotFoundException exception) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, exception.getMessage());
         } catch (JwtException exception) {
