@@ -175,16 +175,18 @@ public class AuthenticationController {
             @ApiResponse(responseCode = "200", description = "JWT token is valid",
                     content = {@Content(mediaType = "application/json",
                             schema = @Schema(implementation = UserDTO.Response.UserDetails.class))}),
-            @ApiResponse(responseCode = "400", description = "JWT token is not valid",
+            @ApiResponse(responseCode = "401", description = "JWT token is not valid",
                     content = {@Content(mediaType = "application/json",
                             schema = @Schema(implementation = SpringErrorMessage.class))}),
             @ApiResponse(responseCode = "404", description = "User not found",
                     content = {@Content(mediaType = "application/json",
                             schema = @Schema(implementation = SpringErrorMessage.class))})})
     @GetMapping("/auth")
-    public ResponseEntity<UserDTO.Response.UserDetails> validateJwtToken(@RequestHeader("Authorization") @Valid @NotBlank String authorizationHeader) {
-        String jwt = authorizationHeader.substring(7);
+    public ResponseEntity<UserDTO.Response.UserDetails> validateJwtToken(@RequestHeader(name = "Authorization", required = false) @Valid @NotBlank String authorizationHeader) {
         try {
+            if(authorizationHeader == null)
+                throw new JwtException("Header 'Authorization' is not present");
+            String jwt = authorizationHeader.substring(7);
             boolean tokenValid = authenticationService.isTokenValid(jwt);
             if (!tokenValid)
                 throw new JwtException("JWT token is not valid");
