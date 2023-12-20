@@ -98,7 +98,7 @@ export const ActionTimetableCard = ({
             color="primary.contrastText"
             variant="body1"
         >
-          {actions.filter(e => tmpTimeSlot.actionId == e.id)[0].command}
+          {actions.filter(e => tmpTimeSlot.actionId == e.actionId)[0].command}
         </Typography>) : (<Select
             fullWidth
             size="small"
