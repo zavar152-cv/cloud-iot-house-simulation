@@ -7,5 +7,6 @@ VOLUME /tmp
 #    chmod 0600 ~/.postgresql/root.crt
 ADD target/*.jar app.jar
 ENV JAVA_OPTS=""
-
+ENV TZ="Europe/Moscow"
+RUN date
 ENTRYPOINT [ "sh", "-c", "java $JAVA_OPTS -jar /app.jar" ]
