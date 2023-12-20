@@ -98,7 +98,7 @@ export const ActionTimetableCard = ({
             color="primary.contrastText"
             variant="body1"
         >
-          {actions.filter(e => tmpTimeSlot.actionId == e.id)[0].command}
+          {actions.filter(e => tmpTimeSlot.actionId === e.id)[0].command}
         </Typography>) : (<Select
             fullWidth
             size="small"
@@ -299,6 +299,7 @@ export const VoiceSettings = ({acts}) => {
     axios.get(import.meta.env.VITE_API_URL + 'device/commands-for-actions').
         then((res) => {
           setActions(res.data);
+          getTimetable();
         }).
         catch((err) => {
           alert(err);
@@ -395,7 +396,6 @@ export const VoiceSettings = ({acts}) => {
 
     useEffect(() => {
       getActions();
-      getTimetable();
     }, []);
 
     return (<Paper elevation={1}>
