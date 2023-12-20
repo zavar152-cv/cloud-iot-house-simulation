@@ -111,7 +111,7 @@ export const ActionTimetableCard = ({
         >
           {actions.map((e, index) => {
             return (<MenuItem
-                value={e.id}
+                value={e.actionId}
                 key={index}
             >
               {e.command}
