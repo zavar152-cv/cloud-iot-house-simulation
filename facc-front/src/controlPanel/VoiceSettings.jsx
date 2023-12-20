@@ -476,7 +476,7 @@ export const VoiceSettings = ({acts}) => {
                     id: timetable.length === 0
                         ? 0
                         : timetable[timetable.length - 1].id + 1, dayOfWeek: 0,
-                    from: '00:00', isNew: true, actionId: actions[0].id
+                    from: '00:00', isNew: true, actionId: actions[0].actionId
                   },
                 ]);
               }}
