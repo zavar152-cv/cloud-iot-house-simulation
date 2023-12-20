@@ -195,7 +195,9 @@ public class AuthenticationController {
             log.info("User has valid token {} and got details", jwt);
             cloudLoggingService.log(LogEntryOuterClass.LogLevel.Level.INFO, "AuthenticationService",
                     "User has valid token {} and got details", jwt);
-            return ResponseEntity.status(HttpStatus.OK).header("X_isAdmin", String.valueOf(userDetailsByToken.getRoles().contains(RoleConstants.ADMIN))).body(userDetailsByToken);
+            return userDetailsByToken.getRoles().contains(RoleConstants.ADMIN) ?
+                    ResponseEntity.status(HttpStatus.OK).header("X_isAdmin", String.valueOf(userDetailsByToken.getRoles().contains(RoleConstants.ADMIN))).body(userDetailsByToken) :
+                    ResponseEntity.status(HttpStatus.OK).body(userDetailsByToken);
         } catch (UsernameNotFoundException exception) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, exception.getMessage());
         } catch (JwtException exception) {
